@@ -1,51 +1,19 @@
 import * as React from "react"
 import {
-    Box , 
+    Box, 
 } from "@mui/material"
+import { motion, AnimatePresence } from "framer-motion"
 
 import {
-    useKeyEventHandlers, 
-    useKeyDownUpProxy,
+    useKeyEvents,
+    KeyName,
 } from "mouseless"
 
 export { CurKey }
 
 function CurKey({}:{}){
 
-    const [keys, set_keys] = React.useState<string[]>([])
-    const [add_keydown_handler, del_keydown_handler] = useKeyEventHandlers(
-        store=>[
-            store.add_keydown_handler,
-            store.del_keydown_handler,
-        ]
-    )
-    const [add_keyup_handler, del_keyup_handler] = useKeyEventHandlers(
-        store=>[
-            store.add_keyup_handler,
-            store.del_keyup_handler,
-        ]
-    )
-
-    React.useEffect(() => {
-        const on_keydown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-            console.log("keydown", event.key)
-            set_keys((prev_keys) => {
-                if(prev_keys.includes(event.key)){
-                    return prev_keys
-                }
-                return [...prev_keys, event.key]
-            })
-        }
-        const on_keyup = (event: React.KeyboardEvent<HTMLDivElement>) => {
-            set_keys((prev_keys) => prev_keys.filter((key) => key !== event.key))
-        }
-        add_keydown_handler(on_keydown)
-        add_keyup_handler  (on_keyup)
-        return () => {
-            del_keydown_handler(on_keydown)
-            del_keyup_handler(on_keyup)
-        }
-    }, [add_keydown_handler, add_keyup_handler, del_keydown_handler, del_keyup_handler])
+    const holding_keys: KeyName[] = useKeyEvents(store=>store.holding_keys)
 
     return <Box sx={{
         display: "flex",
@@ -53,8 +21,24 @@ function CurKey({}:{}){
         flexWrap: "wrap",
         gap: 1,
     }}>
-        {keys.map((key, index) => (
-            <Box key={index}>{key}</Box>
-        ))}
+        <AnimatePresence>
+            {holding_keys.map((key, index) => (
+                <motion.div
+                    key={key}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    style={{
+                        padding: "4px 8px",
+                        backgroundColor: "#e0e0e0",
+                        borderRadius: "4px",
+                        fontSize: "14px",
+                    }}
+                >
+                    {key}
+                </motion.div>
+            ))}
+        </AnimatePresence>
     </Box>
 }

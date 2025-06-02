@@ -1,7 +1,11 @@
+/**
+ * This module is used to provide a proxy for the keydown and keyup events.
+ */
+
 import * as React from "react"
 import {
     useKeyEventHandlers,
-} from "./handlers"
+} from "./downup_handler"
 
 
 export {
@@ -49,10 +53,7 @@ function KeyEventProxyProvider({children}:{children: KeyEventProxyProviderChildr
         store.keyup_handlers,
     ])
 
-    console.log("keydown_handlers", keydown_handlers)
-
     const keydown_proxy = React.useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-        console.log("keydown_proxy", keydown_handlers)
         keydown_handlers.forEach((handler: KeyDownProxy) => handler(event))
     }, [keydown_handlers])
 

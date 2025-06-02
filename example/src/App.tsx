@@ -5,15 +5,23 @@ import {
     Paper , 
 } from "@mui/material"
 
-import { CurKey } from "./curkey"
 import { 
-    KeyEventManager 
+    KeyEventManager ,
+    KeyNames , 
 } from "mouseless"
+
+import { CurKey } from "./curkey"
+import { ExampleHolding } from "./example_holding"
+
 export { App }
 
 function App(){
     console.log("App")
-    return <KeyEventManager>{(keydown_proxy, keyup_proxy) => {
+    return <KeyEventManager
+        preventing_default = {[
+            [KeyNames.ctrl, KeyNames.a],
+        ]}
+    >{(keydown_proxy, keyup_proxy) => {
         return <Box 
             tabIndex = {0}
             sx={{
@@ -24,14 +32,17 @@ function App(){
                 outline: "none",
 
                 display       : "flex",
-                flexDirection : "column",
+                flexDirection : "row",
                 alignItems    : "center",
-                justifyContent: "center",
+                justifyContent: "flex-start",
+                alignContent  : "flex-start",
+                flexWrap      : "wrap",
             }}
             onKeyDown   = {keydown_proxy}
             onKeyUp     = {keyup_proxy}
         >
-            <CurKey />
+            <ExampleHolding />
         </Box>
+        
     }}</KeyEventManager>
 }

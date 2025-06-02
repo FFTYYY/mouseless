@@ -1,41 +1,40 @@
-import * as React from "react"
-
+import { 
+    InnerKeyEventManager ,
+    KeyEventManagerChildren , 
+} from "./manager"
 import {
-    KeyEventHandlersProvider , 
-} from "./handlers"
-
+    KeyName,
+} from "../base"
 import {
     KeyEventProxyProvider , 
-    KeyDownProxy,
-    KeyUpProxy,
-} from "./proxy"
+} from "./downup_proxy"
+import {
+    KeyEventHandlersProvider , 
+} from "./downup_handler"
 
+export * from "./manager"
+export * from "./downup_proxy"
+export * from "./downup_handler"
 export {
     KeyEventManager , 
 }
-export * from "./proxy"
-export * from "./handlers"
 
-type KeyEventManagerChildren = React.ReactNode | ((
-    keydown_proxy: KeyDownProxy,
-    keyup_proxy  : KeyUpProxy,
-) => React.ReactNode)
-
-function KeyEventManager({children}:{children: KeyEventManagerChildren}){    
-    if(typeof children === "function"){
-        return <KeyEventHandlersProvider>
-            <KeyEventProxyProvider>{(keydown_proxy, keyup_proxy) => {
-                return children(
-                    keydown_proxy,
-                    keyup_proxy,
-                )
-            }}</KeyEventProxyProvider>
-        </KeyEventHandlersProvider>
-    }
+function KeyEventManager({
+    children , 
+    preventing_default = []
+}:{
+    children: KeyEventManagerChildren
+    preventing_default?: KeyName[][]
+}){    
     return <KeyEventHandlersProvider>
-        <KeyEventProxyProvider>
-            {children}
-        </KeyEventProxyProvider>
+        <KeyEventProxyProvider>{(keydown_proxy, keyup_proxy) => {
+            return <InnerKeyEventManager
+                keydown_proxy= {keydown_proxy}
+                keyup_proxy  = {keyup_proxy}
+                children     = {children}
+                preventing_default = {preventing_default}
+            />
+        }}</KeyEventProxyProvider>
     </KeyEventHandlersProvider>
 }
 
