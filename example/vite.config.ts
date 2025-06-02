@@ -6,7 +6,7 @@ export default defineConfig({
     plugins: [react()],
     resolve: {
         alias: {
-            "mouseless": resolve(__dirname, "../lib/index.ts"),
+            "mouseless": resolve(__dirname, "../lib/index.tsx"),
         },
     },
 })
