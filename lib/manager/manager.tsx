@@ -1,3 +1,8 @@
+/**
+ * keyevents是高层的按键事件管理。
+ * 每一个按键事件管理描述为：holding + pressing，表示按住某些键的时候按下某个键。
+ */
+
 import * as React from "react"
 import {
     createStore,
@@ -15,23 +20,27 @@ import {
 } from "../base"
 
 import {
-    KeyEventHandlersProvider , 
-    useKeyEventHandlers , 
+    UpDownHandlersProvider , 
+    useUpDownHandlers , 
 } from "./downup_handler"
 
 import {
-    KeyEventProxyProvider , 
     KeyDownProxy,
     KeyUpProxy,
+    useKeyDownUpProxy,
 } from "./downup_proxy"
 
 export {
     InnerKeyEventManager , 
     useKeyEvents,
     useKeyHoldingState,
+    
 }
 export type {
-    KeyEventManagerChildren , 
+    KeyEventManagerChildren ,
+    KeyEventHandlerRegisterFunc , 
+    KeyEventHandler , 
+    KeyEvent , 
 }
 
 type KeyEvent = React.KeyboardEvent<HTMLDivElement>
@@ -40,6 +49,22 @@ interface KeyEventHandlerKey{
     holding : KeyName[] , 
     pressing: KeyName,
 }
+
+type KeyEventHandler = (e: KeyEvent)=>void
+
+/**
+ * 用来注册一个按键事件的函数。
+ * 如果`pressing=""`，那么这个事件会在第一次按住`holding`的时候触发。
+ * 如果`pressing`不为空，那么这个事件会在按住`holding`的同时按下`pressing`的时候触发。
+ * @param holding  按住哪些键。
+ * @param pressing 按下哪个键。
+ * @param func 触发的事件。
+ */
+type KeyEventHandlerRegisterFunc = (
+    holding     : KeyName[] , 
+    pressing    : KeyName ,
+    func        : KeyEventHandler ,
+) =>void  
 
 function encode_idx(holding: KeyName[] , pressing: KeyName): string{
     const sorted_holding = produce(holding, (h: KeyName[])=>{
@@ -69,20 +94,11 @@ interface KeyEvents{
     del_holding_key(key: KeyName): void
 
     handlers: {
-        [idx: string]: ((e?: KeyEvent)=>void)[] , 
+        [idx: string]: KeyEventHandler[] , 
     }
     
-    register_handler(
-        holding     : KeyName[] , 
-        pressing    : KeyName ,
-        func        : (e?: KeyEvent)=>void ,
-    ): void 
-
-    unregister_handler(
-        holding     : KeyName[] , 
-        pressing    : KeyName ,
-        func        : (e?: KeyEvent)=>void ,
-    ): void 
+    register_handler  : KeyEventHandlerRegisterFunc
+    unregister_handler: KeyEventHandlerRegisterFunc
 }
 
 const KeyEvents_ScopedStore = React.createContext<
@@ -125,7 +141,7 @@ function create_keyevents(): StoreApi<KeyEvents>{
 
         handlers: {} as {[idx: string]: (()=>void)[]},
         register_handler: (
-            holding: KeyName[], pressing: KeyName, func: (e?: KeyEvent)=>void
+            holding: KeyName[], pressing: KeyName, func: KeyEventHandler
         ) => {set(state=>{
             const idx = encode_idx(holding, pressing)
             const handlers = produce(state.handlers, hdlrs=>{
@@ -141,7 +157,7 @@ function create_keyevents(): StoreApi<KeyEvents>{
         })} , 
 
         unregister_handler: (
-            holding: KeyName[], pressing: KeyName, func: (e?: KeyEvent)=>void
+            holding: KeyName[], pressing: KeyName, func: KeyEventHandler
         ) => {set(state=>{
             const idx = encode_idx(holding, pressing)
             const handlers = produce(state.handlers, hdlrs=>{
@@ -162,26 +178,20 @@ type KeyEventManagerChildren = React.ReactNode | ((
 ) => React.ReactNode) 
 
 function InnerKeyEventManager({
-    keydown_proxy, 
-    keyup_proxy, 
     children,
     preventing_default , 
 }:{
-    keydown_proxy: KeyDownProxy, 
-    keyup_proxy  : KeyUpProxy, 
     children    : KeyEventManagerChildren,
     preventing_default: KeyName[][]
 }){
-    const preventing_idx = React.useMemo(()=>{
-        return preventing_default.map(arr=>encode_idx(arr, ""))
-    }, [preventing_default])
+    const [keydown_proxy,keyup_proxy] = useKeyDownUpProxy()
 
     const [
         add_keydown_handler, 
         del_keydown_handler,
         add_keyup_handler,
         del_keyup_handler,
-    ] = useKeyEventHandlers(
+    ] = useUpDownHandlers(
         store=>[
             store.add_keydown_handler,
             store.del_keydown_handler,
@@ -203,7 +213,7 @@ function InnerKeyEventManager({
             return
         }
 
-        // 这里event_store不会触发组件自动更新，不过没关系
+        // 这里event_store不会触发组件自动更新，因为我们只用set函数
         const {
             add_holding_key,
             del_holding_key,
@@ -212,22 +222,25 @@ function InnerKeyEventManager({
         const on_keydown = (e: KeyEvent) => {
             const now_key: KeyName = e.key as KeyName
 
-            // 决定要不要阻止默认行为
-            // 这个判断必须在因为已经按下而触发的判断之前做出。
-            const test_idx = encode_idx([...new Set([...holding_keys, now_key])], "")
-            if(preventing_idx.includes(test_idx)){
+            // 如果要阻止的按键全部被按下，则阻止默认行为
+            if(preventing_default.some(arr=>{
+                return arr.every(k=>holding_keys.includes(k) || now_key == k)
+            })){
                 e.preventDefault()
             }
             
-            // 如果已经按下，则什么都不触发
+            // 如果这个键已经按下，则什么都不触发
             if(holding_keys.includes(now_key)){
                 return
             }
 
-            // 找到对应的handler并触发
+            // 找到对应的handler并触发（第一类：按住holding的时候按下pressing）
             const idx = encode_idx(holding_keys, now_key)
             event_store.handlers[idx]?.forEach(h=>h(e)) 
 
+            // 找到对应的handler并触发（第二类：所有holding按键都被按下）
+            const idx_2 = encode_idx([...holding_keys, now_key], "")
+            event_store.handlers[idx_2]?.forEach(h=>h(e)) 
 
             // 更新holding_keys
             add_holding_key(now_key)
@@ -255,10 +268,10 @@ function InnerKeyEventManager({
         del_keydown_handler, 
         del_keyup_handler,
         holding_keys,
-        preventing_idx,
+        preventing_default,
     ])
 
-
+    // 这个组件会自动向下提供keydown_proxy和keyup_proxy
     if(typeof children === "function"){
         return <KeyEvents_ScopedStore value={store_ref.current}>{children(
             keydown_proxy,

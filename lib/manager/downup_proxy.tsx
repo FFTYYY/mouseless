@@ -4,12 +4,12 @@
 
 import * as React from "react"
 import {
-    useKeyEventHandlers,
+    useUpDownHandlers,
 } from "./downup_handler"
 
 
 export {
-    KeyEventProxyProvider , 
+    KeyUpDownProxyProvider , 
     useKeyDownUpProxy , 
 } 
 
@@ -41,14 +41,14 @@ function useKeyDownUpProxy(){
     return [keydown_proxy,keyup_proxy]
 }   
 
-type KeyEventProxyProviderChildren = React.ReactNode | ((
+type KeyUpDownProxyProviderChildren = React.ReactNode | ((
     keydown_proxy: KeyDownProxy,
     keyup_proxy  : KeyUpProxy,
 ) => React.ReactNode)
 
-function KeyEventProxyProvider({children}:{children: KeyEventProxyProviderChildren}){
+function KeyUpDownProxyProvider({children}:{children: KeyUpDownProxyProviderChildren}){
 
-    const [keydown_handlers,keyup_handlers] = useKeyEventHandlers(store => [
+    const [keydown_handlers,keyup_handlers] = useUpDownHandlers(store => [
         store.keydown_handlers,
         store.keyup_handlers,
     ])

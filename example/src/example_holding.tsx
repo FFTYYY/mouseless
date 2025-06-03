@@ -24,7 +24,7 @@ function ExampleHolding(){
         display : "flex",
         flexDirection: "column",
         gap     : "1rem",
-        width   : "20rem",
+        width   : "12rem",
         height  : "5rem",
         padding : "1rem",
         border  : "1px solid #ccc",

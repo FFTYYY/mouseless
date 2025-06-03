@@ -1,3 +1,7 @@
+/**
+ * downup是底层的keydown和keyup事件的逻辑。
+ */
+
 import * as React from "react"
 import {
     createStore,
@@ -9,15 +13,15 @@ import {
 import {useShallow} from "zustand/react/shallow"
 
 export {
-    KeyEventHandlersProvider , 
-    useKeyEventHandlers , 
+    UpDownHandlersProvider , 
+    useUpDownHandlers , 
 } 
 
 export type {
-    KeyEventHandlers , 
+    UpDownHandlers , 
 }
 
-interface KeyEventHandlers{
+interface UpDownHandlers{
     keydown_handlers:(()=>void)[],
     keyup_handlers  :(()=>void)[],
     
@@ -28,12 +32,12 @@ interface KeyEventHandlers{
     del_keyup_handler  :(handler:()=>void)=>void,
 }
 
-const KeyEventHandlers_ScopedStore = React.createContext<
-    StoreApi<KeyEventHandlers> | null
+const UpDownHandlers_ScopedStore = React.createContext<
+    StoreApi<UpDownHandlers> | null
 >(null)
 
-function create_keyeventhandlers_store(): StoreApi<KeyEventHandlers>{
-    return createStore<KeyEventHandlers>(set=>({
+function create_updownhandlers_store(): StoreApi<UpDownHandlers>{
+    return createStore<UpDownHandlers>(set=>({
         keydown_handlers:[] as (()=>void)[],
         keyup_handlers  :[] as (()=>void)[],
         add_keydown_handler:(handler:()=>void)=>{
@@ -61,18 +65,18 @@ function create_keyeventhandlers_store(): StoreApi<KeyEventHandlers>{
     }))
 }
 
-function useKeyEventHandlers(selector: (store: KeyEventHandlers) => any): any{
-    const store = React.useContext(KeyEventHandlers_ScopedStore)
+function useUpDownHandlers(selector: (store: UpDownHandlers) => any): any{
+    const store = React.useContext(UpDownHandlers_ScopedStore)
     if(!store){
-        throw new Error("Not in context of KeyEventHandlersProvider.")
+        throw new Error("Not in context of UpDownHandlersProvider.")
     }
     return useStore(store,useShallow(selector))
 }
 
-function KeyEventHandlersProvider({children}:{children: React.ReactNode}){
+function UpDownHandlersProvider({children}:{children: React.ReactNode}){
 
-    const store = React.useRef(create_keyeventhandlers_store())
-    return <KeyEventHandlers_ScopedStore.Provider value={store.current}>
+    const store = React.useRef(create_updownhandlers_store())
+    return <UpDownHandlers_ScopedStore.Provider value={store.current}>
             {children}
-    </KeyEventHandlers_ScopedStore.Provider>
+    </UpDownHandlers_ScopedStore.Provider>  
 }
