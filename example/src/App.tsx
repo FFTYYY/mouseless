@@ -11,18 +11,18 @@ import {
 } from "mouseless"
 
 import { ExampleHolding } from "./example_holding"
-import { ExampleNavi , space_definition} from "./example_navi"
+import { ExampleNavi , myspace as navi_space} from "./example_navi"
 import { ExampleMove } from "./example_move"
 export { App }
 
 function App(){
-    console.log("App")
     return <KeyEventManager
-        spaces = {[space_definition]}
+        spaces = {[navi_space]}
         preventing_default = {[
             [KeyNames.ctrl, KeyNames.a],
             [KeyNames.alt, KeyNames.w],
             [KeyNames.alt, KeyNames.r],
+            [KeyNames.alt, KeyNames.e],
         ]}
     >{(keydown_proxy, keyup_proxy) => {
         return <Box 
@@ -31,10 +31,12 @@ function App(){
                 position      : "absolute",
                 top           : 0,
                 left          : 0,
-                width         : "auto",
-                height        : "auto",
+                width         : "100%",
+                height        : "100%",
                 backgroundColor: "background.default",
                 outline: "none",
+                boxSizing     : "border-box",
+                padding       : "1rem",
 
                 display       : "flex",
                 flexDirection : "row",
@@ -43,7 +45,6 @@ function App(){
                 alignContent  : "flex-start",
                 flexWrap      : "wrap",
                 gap: "1rem",
-                padding       : "1rem",
             }}
             onKeyDown   = {keydown_proxy}
             onKeyUp     = {keyup_proxy}

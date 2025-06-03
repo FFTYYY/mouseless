@@ -34,6 +34,11 @@ import {
 export {
     useSpaceNavigatorState , 
     SpaceNavigator , 
+    useSpaceNavigatoronMoveRegister , 
+}
+
+export type {
+    onMoveHandler  ,
 }
 
 /**
@@ -46,24 +51,44 @@ interface SpaceNaviGatorOperationItem{
     set_node : NodeName
 }
 type SpaceNaviGatorOperation = SpaceNaviGatorOperationItem[]
+type onMoveHandler = (
+    start_space ?: SpaceName, 
+    start_node  ?: NodeName, 
+    end_space   ?: SpaceName, 
+    end_node    ?: NodeName,
+) => void
 
 interface SpaceNavigatorState{
     name?: SpaceName
     node?: NodeName
-    operations: SpaceNaviGatorOperation[]
-
-    push_operation   : (operation: SpaceNaviGatorOperation) => void
-    pop_operation    : () => void
-
     set_name: (name: SpaceName) => void
     set_node: (node: NodeName) => void
     set_state: (name: SpaceName, node: NodeName) => void
+
+    operations: SpaceNaviGatorOperation[]
+    push_operation   : (operation: SpaceNaviGatorOperation) => void
+    pop_operation    : () => void
+
+    onmove_handlers: onMoveHandler[]
+    add_onmove_handler: (handler: onMoveHandler) => void
+    del_onmove_handler: (handler: onMoveHandler) => void
 }
 
 function create_space_navigator_store(): StoreApi<SpaceNavigatorState>{
     return createStore<SpaceNavigatorState>((set)=>({
         name : undefined,
         node : undefined,
+        set_name: (name: SpaceName) => {
+            set({name})
+        },
+        set_node: (node: NodeName) => {
+            set({node})
+        },
+        set_state: (name: SpaceName, node: NodeName) => {
+            set({name, node})
+        },
+
+        
         operations: [],
 
         push_operation: (operation: SpaceNaviGatorOperation) => {
@@ -77,15 +102,23 @@ function create_space_navigator_store(): StoreApi<SpaceNavigatorState>{
             }))
         },
 
-        set_name: (name: SpaceName) => {
-            set({name})
+        onmove_handlers: [],
+        add_onmove_handler: (handler: onMoveHandler) => {
+            set(state=>{
+                if(state.onmove_handlers.includes(handler)){
+                    return state
+                }
+                return {
+                    onmove_handlers: [...state.onmove_handlers, handler]
+                }
+            })
         },
-        set_node: (node: NodeName) => {
-            set({node})
+        del_onmove_handler: (handler: onMoveHandler) => {
+            set(state=>({
+                onmove_handlers: state.onmove_handlers.filter(h=>h!=handler)
+            }))
         },
-        set_state: (name: SpaceName, node: NodeName) => {
-            set({name, node})
-        },
+        
     }))
 }
 
@@ -106,6 +139,19 @@ function useSpaceNavigatorState(){
     }))
 }
 
+function useSpaceNavigatoronMoveRegister(){
+    const store = React.useContext(SpaceNavigator_ScopedStore)
+    if(!store){
+        throw new Error("Not in context of SpaceNavigator")
+    }
+    return useStore(store, useShallow((state)=>{
+        return [
+            state.add_onmove_handler,
+            state.del_onmove_handler,
+        ]
+    }))
+}
+
 /**
  * 给定一个空间，将其翻译成一系列handler。
  * @param space 要处理的空间。
@@ -120,11 +166,23 @@ function make_register_handlers(
     handlers.push([
         space.holding,
         "", // 全部按住时触发
+        false,
         ()=>{push_operation([{
             if_space : "_none", 
             if_node  : "_none", 
             set_space: space.name, 
             set_node : space.start_node
+        }])}
+    ])
+    handlers.push([
+        space.holding,
+        "",   // 离开空间时触发
+        true, // 抬起时触发
+        ()=>{push_operation([{
+            if_space : space.name, 
+            if_node  : "_any", 
+            set_space: "_none", 
+            set_node : "_none"
         }])}
     ])
 
@@ -146,6 +204,7 @@ function make_register_handlers(
         handlers.push([
             space.holding,
             trigger as KeyName, // 全部按住时触发
+            false,
             ()=>{push_operation(operation)}
         ])
     }
@@ -165,9 +224,19 @@ function SpaceNavigator({
         create_space_navigator_store()
     )
     // holding keys要放到外面来，这样才能触发组件自动更新
-    const [cur_name, cur_node, cur_operations] = useStore(
+    const [
+        cur_name, 
+        cur_node, 
+        cur_operations,
+        onmove_handlers,
+    ] = useStore(
         store_ref.current, 
-        useShallow(state => [state.name, state.node, state.operations])
+        useShallow(state => [
+            state.name, 
+            state.node, 
+            state.operations, 
+            state.onmove_handlers
+        ])
     )
 
     const [register_handler,unregister_handler]: [
@@ -229,11 +298,20 @@ function SpaceNavigator({
             const flag_2 = op.if_node  == cur_node    
                 || op.if_node  == "_any"
                 || (op.if_node  == "_none" && !cur_node)
-
-            if(flag_1 && flag_2){
-                set_state(op.set_space, op.set_node)
-                break // 只执行一次操作
+            
+            // 如果操作没有匹配，就跳过
+            if((!flag_1) || (!flag_2)){
+                continue
             }
+
+            onmove_handlers.forEach(handler=>{
+                handler(cur_name, cur_node, op.set_space, op.set_node)
+            })
+            
+            // 执行操作
+            set_state(op.set_space, op.set_node)
+            
+            break // 只执行一次操作
         }
         // 不论操作有没有执行，都要出队。
         pop_operation()
@@ -241,6 +319,8 @@ function SpaceNavigator({
         cur_operations , 
         cur_name,
         cur_node,
+        spaces , 
+        onmove_handlers , 
     ])
 
     // 这个组件会自动向下提供keydown_proxy和keyup_proxy

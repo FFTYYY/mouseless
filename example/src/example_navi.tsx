@@ -11,6 +11,8 @@ import {
     Edge , 
     useSpaceNavigatorState ,
     NodeName,
+    useSpaceNavigatoronMoveRegister , 
+    SpaceName ,
 } from "mouseless"
 
 import {
@@ -19,10 +21,10 @@ import {
 
 export {
     ExampleNavi,
-    space_definition , 
+    myspace , 
 }
 
-const space_definition: SpaceDefinition = {
+const myspace: SpaceDefinition = {
     name        : "example",
     nodes       : ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
     start_node  : "1",
@@ -60,9 +62,10 @@ function ExampleNavi(){
     const holding = useKeyHoldingState([KeyNames.alt, KeyNames.w])
     
     const [space, node] = useSpaceNavigatorState()
+    const [addOnMoveHandler, delOnMoveHandler] = useSpaceNavigatoronMoveRegister()
 
     const make_chosen = (cur_node: NodeName) => {
-        if(space == space_definition.name && node == cur_node){
+        if(space == myspace.name && node == cur_node){
             return {
                 sx:{
                     backgroundColor: "rgba(44, 41, 41, 0.89)",
@@ -72,6 +75,32 @@ function ExampleNavi(){
         }
         return {sx:{}}
     }
+
+    const [words, set_words] = React.useState<string>("按下alt+w开始吧！")
+
+    React.useEffect(()=>{
+        const handler = (
+            start_space ?: SpaceName, 
+            start_node  ?: NodeName, 
+            end_space   ?: SpaceName, 
+            end_node    ?: NodeName , 
+        )=>{
+            if((start_space != myspace.name) && (end_space == myspace.name)){
+                set_words("上一次操作：进入空间")
+            }
+            if(start_space == end_space){
+                set_words(`上一次操作：从${start_node}移动到${end_node}`)
+            }
+            if(start_space == myspace.name && end_space != myspace.name){
+                set_words("按下alt+w开始吧！")
+            }
+        }
+        addOnMoveHandler(handler)
+        return ()=>{
+            delOnMoveHandler(handler)
+        }
+    }, [addOnMoveHandler, delOnMoveHandler])
+
 
     return <Box sx={{  
         position: "relative",
@@ -139,7 +168,7 @@ function ExampleNavi(){
             )}
 
 
-            <Typography>按下alt+w开始吧！</Typography>
+            <Typography>{words}</Typography>
         </Box>
         <Box sx={{
             position: "absolute",

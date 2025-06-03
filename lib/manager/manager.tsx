@@ -45,9 +45,10 @@ export type {
 
 type KeyEvent = React.KeyboardEvent<HTMLDivElement>
 
-interface KeyEventHandlerKey{
+interface KeyEventHandlerIdx{
     holding : KeyName[] , 
     pressing: KeyName,
+    reverse : boolean,
 }
 
 type KeyEventHandler = (e: KeyEvent)=>void
@@ -58,30 +59,34 @@ type KeyEventHandler = (e: KeyEvent)=>void
  * 如果`pressing`不为空，那么这个事件会在按住`holding`的同时按下`pressing`的时候触发。
  * @param holding  按住哪些键。
  * @param pressing 按下哪个键。
+ * @param reverse 如果为`true`，那么就在抬起时触发，而非进入时触发。
  * @param func 触发的事件。
  */
 type KeyEventHandlerRegisterFunc = (
     holding     : KeyName[] , 
     pressing    : KeyName ,
+    reverse     : boolean ,
     func        : KeyEventHandler ,
 ) =>void  
 
-function encode_idx(holding: KeyName[] , pressing: KeyName): string{
+function encode_idx(holding: KeyName[] , pressing: KeyName, reverse: boolean): string{
     const sorted_holding = produce(holding, (h: KeyName[])=>{
         return h.sort()
     })
     return JSON.stringify({
         holding : sorted_holding,
         pressing: pressing,
+        reverse : reverse,
     })
 
 }
-function decode_idx(key: string): KeyEventHandlerKey{
+function decode_idx(key: string): KeyEventHandlerIdx{
     try{
         const decoded = JSON.parse(key)
         return {
             holding : decoded.holding,
             pressing: decoded.pressing,
+            reverse : decoded.reverse,
         }
     }catch(e){
         throw new Error("Invalid key: " + key)
@@ -141,9 +146,9 @@ function create_keyevents(): StoreApi<KeyEvents>{
 
         handlers: {} as {[idx: string]: (()=>void)[]},
         register_handler: (
-            holding: KeyName[], pressing: KeyName, func: KeyEventHandler
+            holding: KeyName[], pressing: KeyName, reverse: boolean, func: KeyEventHandler
         ) => {set(state=>{
-            const idx = encode_idx(holding, pressing)
+            const idx = encode_idx(holding, pressing, reverse)
             const handlers = produce(state.handlers, hdlrs=>{
                 if(hdlrs[idx] && !hdlrs[idx].includes(func)){
                     hdlrs[idx].push(func)
@@ -157,9 +162,9 @@ function create_keyevents(): StoreApi<KeyEvents>{
         })} , 
 
         unregister_handler: (
-            holding: KeyName[], pressing: KeyName, func: KeyEventHandler
+            holding: KeyName[], pressing: KeyName, reverse: boolean, func: KeyEventHandler
         ) => {set(state=>{
-            const idx = encode_idx(holding, pressing)
+            const idx = encode_idx(holding, pressing, reverse)
             const handlers = produce(state.handlers, hdlrs=>{
                 if(hdlrs[idx]){
                     hdlrs[idx] = hdlrs[idx].filter(h=>h !== func)
@@ -235,11 +240,11 @@ function InnerKeyEventManager({
             }
 
             // 找到对应的handler并触发（第一类：按住holding的时候按下pressing）
-            const idx = encode_idx(holding_keys, now_key)
+            const idx = encode_idx(holding_keys, now_key, false)
             event_store.handlers[idx]?.forEach(h=>h(e)) 
 
             // 找到对应的handler并触发（第二类：所有holding按键都被按下）
-            const idx_2 = encode_idx([...holding_keys, now_key], "")
+            const idx_2 = encode_idx([...holding_keys, now_key], "", false)
             event_store.handlers[idx_2]?.forEach(h=>h(e)) 
 
             // 更新holding_keys
@@ -251,6 +256,14 @@ function InnerKeyEventManager({
                 console.warn("抬起的键未曾被按下。")
                 return
             }
+
+            // 找到对应的reverse handler并触发（第一类：按住holding的时候抬起pressing）
+            const idx = encode_idx(holding_keys, now_key, true)
+            event_store.handlers[idx]?.forEach(h=>h(e)) 
+
+            // 找到对应的reverse handler并触发（第二类：破坏holding按键组合）
+            const idx_2 = encode_idx(holding_keys, "", true)
+            event_store.handlers[idx_2]?.forEach(h=>h(e)) 
 
             // 更新holding_keys
             del_holding_key(now_key)

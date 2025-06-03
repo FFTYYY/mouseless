@@ -23,11 +23,11 @@ export {
 
 
 function ExampleMove(){
-    const holding = useKeyHoldingState([KeyNames.alt, KeyNames.r])
-    const holding_left  = useKeyHoldingState([KeyNames.alt, KeyNames.r, KeyNames.ArrowLeft])
-    const holding_right = useKeyHoldingState([KeyNames.alt, KeyNames.r, KeyNames.ArrowRight])
-    const holding_up    = useKeyHoldingState([KeyNames.alt, KeyNames.r, KeyNames.ArrowUp])
-    const holding_down  = useKeyHoldingState([KeyNames.alt, KeyNames.r, KeyNames.ArrowDown])
+    const holding = useKeyHoldingState([KeyNames.alt, KeyNames.e])
+    const holding_left  = useKeyHoldingState([KeyNames.alt, KeyNames.e, KeyNames.ArrowLeft])
+    const holding_right = useKeyHoldingState([KeyNames.alt, KeyNames.e, KeyNames.ArrowRight])
+    const holding_up    = useKeyHoldingState([KeyNames.alt, KeyNames.e, KeyNames.ArrowUp])
+    const holding_down  = useKeyHoldingState([KeyNames.alt, KeyNames.e, KeyNames.ArrowDown])
 
     const box_ref   = React.useRef<HTMLDivElement>(null)
     const mover_ref = React.useRef<HTMLDivElement>(null)
@@ -47,8 +47,14 @@ function ExampleMove(){
             let dy = (holding_down  ? 2 : 0) - (holding_up   ? 2 : 0)
 
             // 确保mover不会超出box的边界
-            const new_x = Math.max(0, Math.min(position.x + dx, box_rect.width - mover_rect.width))
-            const new_y = Math.max(0, Math.min(position.y + dy, box_rect.height - mover_rect.height))
+            const new_x = Math.max(0, Math.min(
+                position.x + dx, 
+                box_rect.width - mover_rect.width
+            ))
+            const new_y = Math.max(0, Math.min(
+                position.y + dy, 
+                box_rect.height - mover_rect.height
+            ))
 
             set_position({x: new_x, y: new_y})
         }
@@ -95,10 +101,9 @@ function ExampleMove(){
                     height: "1rem",
                     backgroundColor: "rgba(185, 103, 103, 0.5)",
                 }}>
-                    <Typography>移动</Typography>
                 </Box>
             )}
-            <Typography>按下alt+r开始吧！</Typography>
+            <Typography>按下alt+e开始吧！</Typography>
         </Box>
         <Box sx={{
             position: "absolute",
