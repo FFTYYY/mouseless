@@ -20,7 +20,7 @@ export {
 function ExampleHolding(){
     const holding = useKeyHoldingState(["Control", "a"])
 
-    return             <Box sx={{  
+    return <Box sx={{  
         display : "flex",
         flexDirection: "column",
         gap     : "1rem",

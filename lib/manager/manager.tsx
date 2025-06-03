@@ -34,7 +34,7 @@ export {
     InnerKeyEventManager , 
     useKeyEvents,
     useKeyHoldingState,
-    
+    useKeyEventsHandlerRegister , 
 }
 export type {
     KeyEventManagerChildren ,
@@ -118,14 +118,22 @@ function useKeyEvents(selector: (store: KeyEvents) => any): any{
     return useStore(store, useShallow(selector))
 }
 
+function useKeyEventsHandlerRegister(): [
+    KeyEventHandlerRegisterFunc,
+    KeyEventHandlerRegisterFunc,
+]{
+    return useKeyEvents(store=>{
+        return [
+            store.register_handler,
+            store.unregister_handler,
+        ]
+    })
+}
+
 function useKeyHoldingState(keys: KeyName[]): boolean{
-    const store = React.useContext(KeyEvents_ScopedStore)
-    if(!store){
-        throw new Error("KeyEvents_ScopedStore not found")
-    }
-    return useStore(store, useShallow(state=>{
+    return useKeyEvents(state=>{
         return keys.every(k=>state.holding_keys.includes(k))
-    }))
+    })
 }
 
 function create_keyevents(): StoreApi<KeyEvents>{

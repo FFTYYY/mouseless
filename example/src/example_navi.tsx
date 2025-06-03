@@ -13,6 +13,7 @@ import {
     NodeName,
     useSpaceNavigatoronMoveRegister , 
     SpaceName ,
+    useKeyEventsHandlerRegister , 
 } from "mouseless"
 
 import {
@@ -63,6 +64,7 @@ function ExampleNavi(){
     
     const [space, node] = useSpaceNavigatorState()
     const [addOnMoveHandler, delOnMoveHandler] = useSpaceNavigatoronMoveRegister()
+    const [addOnKeyEventHandler, delOnKeyEventHandler] = useKeyEventsHandlerRegister()
 
     const make_chosen = (cur_node: NodeName) => {
         if(space == myspace.name && node == cur_node){
@@ -101,6 +103,31 @@ function ExampleNavi(){
         }
     }, [addOnMoveHandler, delOnMoveHandler])
 
+    React.useEffect(()=>{
+        const handler = ()=>{
+            if(space == myspace.name){
+                set_words(`上一次操作：激活${node}`)
+            }
+        }
+        addOnKeyEventHandler(
+            [KeyNames.alt, KeyNames.w],
+            KeyNames.Enter,
+            false,
+            handler , 
+        )
+        return ()=>{
+            delOnKeyEventHandler(
+                [KeyNames.alt, KeyNames.w],
+                KeyNames.Enter,
+                false,
+                handler , 
+            )
+        }
+    }, [
+        addOnKeyEventHandler , 
+        delOnKeyEventHandler , 
+        space , node , 
+    ])
 
     return <Box sx={{  
         position: "relative",
