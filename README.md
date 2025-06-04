@@ -14,18 +14,19 @@
 
 **Detecting Holding State**
   Keep tracking of wether a combination of keys are pressed.
-```javascript
+<!-- ```javascript
 function MyComponent(){
     const holding = useKeyHoldingState([KeyNames.ctrl, KeyNames.s])
 
     return holding ? <CatDance /> : <></>
 }
-```
+``` -->
 
 </td>
 <td style="border: none !important; padding: 0 !important;" width="50%">
 
-![illu_holding.gif](resources/illu_holding.gif)
+<!-- ![illu_holding.gif](resources/illu_holding.gif) -->
+<img style="width: 400px; height: auto;" src="resources/illu_holding.gif"/>
 
 </td>
 </tr>
