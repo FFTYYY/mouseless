@@ -3,6 +3,7 @@ import * as React from "react"
 import {
     Box , 
     Paper , 
+    Typography , 
 } from "@mui/material"
 
 import { 
@@ -34,7 +35,8 @@ function App(){
                 height        : "100%",
                 outline       : "none",
                 boxSizing     : "border-box",
-                padding       : "2rem",
+                paddingX      : "2rem",
+                paddingY      : "2rem",
                 backgroundColor: "rgb(252, 249, 249)",
                 filter        : "drop-shadow(0 0 10px rgba(0, 0, 0, 0.1))",
                 
@@ -52,7 +54,13 @@ function App(){
             <ExampleHolding />
             <ExampleNavi />
             <ExampleMove />
+
+            <Typography sx={{
+                position: "absolute",
+                top: "21rem",
+                left: "24.5rem",
+            }}>(Use arrow keys to navigate & move)</Typography>
+
         </Box>
-        
     }}</KeyEventManager>
 }
