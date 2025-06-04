@@ -1,3 +1,7 @@
+/**
+ * 这一页是Claude大师写的。感谢Claude大师。
+ */
+
 import React, { useState, useEffect } from "react"
 
 export {
