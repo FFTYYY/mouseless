@@ -39,12 +39,31 @@ function MyComponent(){
 **Use Keyboard to Navigate UI Elements**
 
 ```javascript
-function MyComponent(){
+function MyComponent({onClick}){
     const holding = useKeyHoldingState([
         KeyNames.alt, 
         KeyNames.w , 
     ])
     const [space, node] = useSpaceNavigatorState()
+    const [
+        addOnKeyEventHandler, 
+        delOnKeyEventHandler
+    ] = useKeyEventsHandlerRegister()
+
+    React.useEffect(()=>{
+        const handler = ()=>(space == "my_space" && onClick(node))
+        addOnKeyEventHandler(
+            [KeyNames.alt, KeyNames.w], KeyNames.Enter,
+            false, handler , 
+        )
+        return ()=>{
+            delOnKeyEventHandler(
+                [KeyNames.alt, KeyNames.w], KeyNames.Enter,
+                false, handler , 
+            )
+        }
+    }, [space , node])
+
     return (!holding) || (space != "my_space") ? <></> : (
         <Penel cur_node={node}>
     )
