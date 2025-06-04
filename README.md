@@ -158,7 +158,7 @@ function App(){
 
 ### Core Hooks
 
-`mouseless` provides several hooks for accessing keyboard states and listening high-level keyboard events.
+`mouseless` provides several hooks for accessing keyboard states and listening to high-level keyboard events.
 
 - **`useKeyHoldingState`** 
   
