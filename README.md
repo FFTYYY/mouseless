@@ -2,11 +2,16 @@
 
 `mouseless` is a React library that helps to define high-level keyboard operations.
 
-# Installation
+## Installation
 
-`npm install @ftyyy/mouseless`
+Install from npm:
+```
+npm install @ftyyy/mouseless
+```
 
-# Features
+## Feature Highlights
+
+Code below are simplified. See [example/](/example/) for full examples.
 
 <table style="border: none !important; border-collapse: collapse !important; border-spacing: 0 !important; padding: 0 !important; margin: 0 !important;">
 <tr style="border: none !important;">
@@ -15,14 +20,13 @@
 
 **Keep Tracking of Pressed and Holding Keys**
 
+Also notice how default behavior of the browser is prevented.
+
 ```javascript
 function MyComponent(){
-    const holding = useKeyHoldingState([
-        KeyNames.ctrl, 
-        KeyNames.s , 
-    ])
+    const holding = useKeyHoldingState(["Ctrl", "s"])
 
-    return holding && <CatDance /> 
+    return holding && <CatDance />
 }
 ```
 
@@ -33,6 +37,7 @@ function MyComponent(){
 
 </td>
 </tr>
+
 <tr style="border: none !important;">
 <td style="border: none !important; padding: 0 !important;" width="50%">
 
@@ -43,12 +48,13 @@ function MyComponent({onClick}){
     const keys = ["Alt", "w"]
     const holding = useKeyHoldingState(keys)
     const [space, node] = useSpaceNavigatorState()
-    const [add_handler, del_handler] 
-        = useKeyEventsHandlerRegister()
+    const [ 
+        add_handler, del_handler
+    ] = useKeyEventsHandlerRegister()
 
     React.useEffect(()=>{
         const handler = ()=>(
-            space == "my_space" && onClick(node)
+            (space == "my_space") && onClick(node)
         )
         add_handler(keys, "Enter", false, handler)
         return ()=>{
@@ -56,10 +62,10 @@ function MyComponent({onClick}){
         }
     }, [space , node])
 
-    return (holding && space == "my_space") && (
+    return (holding && (space == "my_space")) && (
         <Penel cur_node={node}>
     )
-}    
+}
 ```
 
 </td>
@@ -68,6 +74,7 @@ function MyComponent({onClick}){
 ![illu_navi.gif](resources/illu_navi.gif)
 
 </td>
+</tr>
 
 <tr style="border: none !important;">
 <td style="border: none !important; padding: 0 !important;" width="50%">
@@ -93,8 +100,8 @@ function MyComponent(){
         return ()=>{clearInterval(interval)}
     }, [pos, L, R, U, D])
 
-    return holding && <Plane x={pos.x} y={pos.y}>
-}    
+    return holding && <Plane x={pos.x} y={pos.y} />
+}
 ```
 
 </td>
@@ -108,4 +115,6 @@ function MyComponent(){
 
 </table>
 
+## Quick Start
 
+TODO
