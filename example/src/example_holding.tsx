@@ -3,14 +3,20 @@ import {
     Box,
     Typography,
 } from "@mui/material"
+import { motion } from "framer-motion"
 
 import {
     useKeyHoldingState,
+    KeyNames , 
 } from "mouseless"
 
 import {
     CurKey
 } from "./curkey"
+
+import {
+    SpinningCat
+} from "./spinning_cat"
 
 export {
     ExampleHolding,
@@ -18,22 +24,58 @@ export {
 
 
 function ExampleHolding(){
-    const holding = useKeyHoldingState(["Control", "a"])
+    const holding = useKeyHoldingState([KeyNames.ctrl, KeyNames.s])
 
     return <Box sx={{  
-        display : "flex",
-        flexDirection: "column",
-        gap     : "1rem",
-        width   : "12rem",
-        height  : "5rem",
+        width   : "18rem",
+        height  : "15rem",
         padding : "1rem",
         border  : "1px solid #ccc",
+        position: "relative",
     }}>
-        <Typography>
-            {holding ? "You Are Holding ctrl+a" : "You Are Not Holding ctrl+a"}
-        </Typography>
+        <motion.span
+            animate={{
+                scale: holding ? 0.8 : 1,
+                x: holding ? -20 : 0,
+                y: holding ? -105 : 0,
+            }}
+            transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 20
+            }}
+            style = {{
+                backgroundColor: "rgb(252, 249, 249)",
+                width: "auto",
+                padding: "0.5rem",
+                position: "absolute",
+                left: "1rem" , 
+                top: "30%",
+            }}
+        >
+            <Typography variant="h6">{holding 
+                ? "Cat is cute!" 
+                : "Hold ctrl+s to watch cat dance"
+            }</Typography>
+        </motion.span>
+
+        {holding && <Box sx={{
+            position: "absolute",
+            top: "15%" , 
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+        }}><SpinningCat /></Box>}
+
         <Box sx={{
-            height: "2rem"
+            position: "absolute",
+            bottom: "0.5rem",
+            height: "5rem" , 
+            width: "calc(100% - 2rem)",
+            boxSizing: "border-box",
+            borderTop: "1px solid #ccc",
+            paddingTop: "0.5rem",
         }}>
             <CurKey />
         </Box>

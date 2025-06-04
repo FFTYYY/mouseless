@@ -49,6 +49,7 @@ interface SpaceNaviGatorOperationItem{
     if_node  : NodeName  | "_any" | "_none"
     set_space: SpaceName
     set_node : NodeName
+    set_last ?: boolean 
 }
 type SpaceNaviGatorOperation = SpaceNaviGatorOperationItem[]
 type onMoveHandler = (
@@ -72,6 +73,12 @@ interface SpaceNavigatorState{
     onmove_handlers: onMoveHandler[]
     add_onmove_handler: (handler: onMoveHandler) => void
     del_onmove_handler: (handler: onMoveHandler) => void
+
+    // 记住上一次退出的时候的节点。重新进入space的时候从这里开始。
+    last_node: {
+        [space: SpaceName]: NodeName
+    }
+    set_last_node: (space: SpaceName, node: NodeName) => void
 }
 
 function create_space_navigator_store(): StoreApi<SpaceNavigatorState>{
@@ -119,6 +126,12 @@ function create_space_navigator_store(): StoreApi<SpaceNavigatorState>{
             }))
         },
         
+        last_node: {},
+        set_last_node: (space: SpaceName, node: NodeName) => {
+            set(state=>({
+                last_node: {...state.last_node, [space]: node}
+            }))
+        },
     }))
 }
 
@@ -159,6 +172,7 @@ function useSpaceNavigatoronMoveRegister(){
  */
 function make_register_handlers(
     space: SpaceDefinition , 
+    start_node: NodeName,
     push_operation: (operation: SpaceNaviGatorOperation) => void , 
 ): Parameters<KeyEventHandlerRegisterFunc>[]
 {
@@ -171,19 +185,22 @@ function make_register_handlers(
             if_space : "_none", 
             if_node  : "_none", 
             set_space: space.name, 
-            set_node : space.start_node
+            set_node : start_node || space.start_node
         }])}
     ])
     handlers.push([
         space.holding,
         "",   // 离开空间时触发
         true, // 抬起时触发
-        ()=>{push_operation([{
-            if_space : space.name, 
-            if_node  : "_any", 
-            set_space: "_none", 
-            set_node : "_none"
-        }])}
+        ()=>{
+            push_operation([{
+                if_space : space.name, 
+                if_node  : "_any"    , 
+                set_space: "_none"   , 
+                set_node : "_none"   , 
+                set_last : true      , // 设置下一次的开始节点
+            }])
+        }
     ])
 
     let navi_operation: {
@@ -229,13 +246,15 @@ function SpaceNavigator({
         cur_node, 
         cur_operations,
         onmove_handlers,
+        last_nodes,
     ] = useStore(
         store_ref.current, 
         useShallow(state => [
             state.name, 
             state.node, 
             state.operations, 
-            state.onmove_handlers
+            state.onmove_handlers,
+            state.last_node,
         ])
     )
 
@@ -257,6 +276,7 @@ function SpaceNavigator({
                 ...acc,
                 ...make_register_handlers(
                     space,
+                    last_nodes[space.name] || space.start_node, // 初始节点
                     push_operation,
                 )
             ]
@@ -275,13 +295,14 @@ function SpaceNavigator({
         register_handler, 
         unregister_handler, 
         spaces , 
+        last_nodes , 
     ])
 
     React.useEffect(()=>{
         // 注意这里是不会触发自动更新的
         const state = store_ref.current?.getState() 
         if(!state) return
-        const {pop_operation, set_state} = state
+        const {pop_operation, set_state, set_last_node} = state
         
         if(cur_operations.length <= 0){
             return 
@@ -310,6 +331,10 @@ function SpaceNavigator({
             
             // 执行操作
             set_state(op.set_space, op.set_node)
+
+            if(op.set_last && cur_name && cur_node){
+                set_last_node(cur_name, cur_node)
+            }
             
             break // 只执行一次操作
         }

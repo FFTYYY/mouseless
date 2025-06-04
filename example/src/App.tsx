@@ -19,9 +19,8 @@ function App(){
     return <KeyEventManager
         spaces = {[navi_space]}
         preventing_default = {[
-            [KeyNames.ctrl, KeyNames.a],
+            [KeyNames.ctrl, KeyNames.s],
             [KeyNames.alt, KeyNames.w],
-            [KeyNames.alt, KeyNames.r],
             [KeyNames.alt, KeyNames.e],
         ]}
     >{(keydown_proxy, keyup_proxy) => {
@@ -33,11 +32,12 @@ function App(){
                 left          : 0,
                 width         : "100%",
                 height        : "100%",
-                backgroundColor: "background.default",
                 outline: "none",
                 boxSizing     : "border-box",
                 padding       : "1rem",
-
+                backgroundColor: "rgb(252, 249, 249)",
+                filter        : "drop-shadow(0 0 10px rgba(0, 0, 0, 0.1))",
+                
                 display       : "flex",
                 flexDirection : "row",
                 alignItems    : "center",

@@ -1,6 +1,7 @@
 import * as React from "react"
 import {
     Box, 
+    Typography , 
 } from "@mui/material"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -20,7 +21,10 @@ function CurKey({}:{}){
         flexDirection: "row",
         flexWrap: "wrap",
         gap: 1,
+        width: "100%",
+        boxSizing: "border-box",
     }}>
+        <Typography>{holding_keys.length > 0 ? "Pressing Keys: " : "No Keys Pressed."}</Typography>
         <AnimatePresence>
             {holding_keys.map((key, index) => (
                 <motion.div
