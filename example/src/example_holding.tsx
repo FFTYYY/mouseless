@@ -62,9 +62,7 @@ function ExampleHolding(){
         {holding && <Box sx={{
             position: "absolute",
             top: "15%" , 
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
+            left: "30%",
             width: "100%",
         }}><SpinningCat /></Box>}
 

@@ -32,9 +32,9 @@ function App(){
                 left          : 0,
                 width         : "100%",
                 height        : "100%",
-                outline: "none",
+                outline       : "none",
                 boxSizing     : "border-box",
-                padding       : "1rem",
+                padding       : "2rem",
                 backgroundColor: "rgb(252, 249, 249)",
                 filter        : "drop-shadow(0 0 10px rgba(0, 0, 0, 0.1))",
                 
@@ -44,7 +44,7 @@ function App(){
                 justifyContent: "flex-start",
                 alignContent  : "flex-start",
                 flexWrap      : "wrap",
-                gap: "1rem",
+                gap           : "2rem",
             }}
             onKeyDown   = {keydown_proxy}
             onKeyUp     = {keyup_proxy}
