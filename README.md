@@ -1,6 +1,6 @@
 # Mouseless
 
-`mouseless` is a React library that for defining high-level keyboard interactions.
+`mouseless` is a React library for defining high-level keyboard interactions.
 
 
 ## Installation
@@ -23,7 +23,7 @@ Code below are simplified. For full example code, see the [example folder](/exam
 
 <td style="border: none !important; padding: 0 !important;" width="50%">
 
-**Track Pressed and Held Keys**
+**Track Held Keys**
 
 Detect when specific key combinations (e.g. `ctrl` + `s`) are being held.
 
@@ -95,7 +95,7 @@ function MyComponent({onClick}){
 <tr style="border: none !important;">
 <td style="border: none !important; padding: 0 !important;" width="50%">
 
-**Move Elements with Keys**
+**Move Elements with Keyboard**
 
 Simulate "drag and move" behavior with arrow keys.
 
@@ -156,13 +156,20 @@ function App(){
 }
 ```
 
-### Core Hooks
+#### Core Concepts
+
+`mouseless` will provide information of the following states/events:
+- **holding**: for a key combination that is being pressed & held, they are called holding keys. `mouseless` keeps track of the state of all holding keys.
+- **pressing** / **releasing** events: when a key that is being pressed or being released, it will trigger an event (just like the original `keyDown` and `keyUp` events).
+-  the combination of these two types of information.
+
+### Hooks
 
 `mouseless` provides several hooks for accessing keyboard states and listening to high-level keyboard events.
 
 - **`useKeyHoldingState`** 
   
-    Returns `true` if the given key combination is currently being held down.
+    Returns `true` if the given key combination is currently being held.
 
     ```javascript 
     import * as React from "react"
@@ -181,6 +188,17 @@ function App(){
 - **`useKeyEventsHandlerRegister`** 
 
     Returns `[add_handler, del_handler]` functions to register high-level key events listeners.
+
+    `add_handler` listens to the event that a key is pressing or releasing, while a combination of keys are being held. Unlike the original `keyDown` event, even when the pressing key is kept held after pressing, the event will only be triggered once. 
+    ```js
+    add_handler: (
+        KeyName[],              // key combination that needs to be held to trigger the event
+        KeyName,                // key that needs to be pressing / releasing to trigger the event
+        boolean,                // `true`: listen to key releasing; `false`: listen to key pressing
+        (e: KeyEvent)=>void ,   // callback function when the event is triggered.
+    ) => void
+    ```
+    The `del_handler` has the same arguments with `add_handler`.
 
 
     ```javascript 
@@ -234,37 +252,43 @@ function App(){
     }
     ```
 
-    To detect when a key combination is first reached, pass an empty string as the second argument.
+    When the second argument of `add_handler` (as well as `del_handler`) is an empty string, it listens to the reach of a certain key combination, no matter which key is the last to be pressed.
 
-    For example, the following handler triggers either when `alt` is held and `w` is pressed, or when `w` is held and `alt` is pressed.
+    For example, the following handler will be triggered either when `alt` is held and `w` is being pressed, or when `w` is held and `alt` is being pressed.
     ```javascript
     add_handler([KeyNames.alt, KeyNames.w], "", false, handler)
     ```
-    Similarly, the following handler triggers either when `alt` is held and `w` is released, or when `w` is held and `alt` is released.
+    Similarly, the following handler will be triggered either when `alt` is held and `w` is being released, or when `w` is held and `alt` is being released.
     ```javascript
     add_handler([KeyNames.alt, KeyNames.w], "", true, handler)
     ```
     
 
-#### Space Navigator
+### Space Navigator
 
 The **Space Navigator** is a built-in plugin provided by `mouseless` that enables keyboard-based navigation across UI elements.
 
 
 A navigator is defined as a *graph* (called **space**). Each *node* of a space is a string and each *edge* defines a directional transition between two nodes, triggered by a specific key.
 
-To activate a space, you must define a `holding` key combination. The space is activated only when this key combination is held.
+Each space need to have a `holding` key combination. The space is activated only when this key combination is held.
 
-Each edge requires a `trigger` key that initiates movement from one node to another. It will only take effect if the corresponding space is currently active (i.e. the `holding` keys are held).
+Each edge requires a `trigger` key that initiates movement from one node to another. It will only take effect when the corresponding space is currently active (i.e. the `holding` keys are held).
 
 ```js
 import type { SpaceDefinition } from "@ftyyy/mouseless"
+
 const my_space: SpaceDefinition = {
-    name        : "my_space",
-    nodes       : ["1", "2", "3"],
-    start_node  : "1", // the node to be activated when first enter the space
-    holding     : [KeyNames.alt, KeyNames.w], // the key combinations that enters the space when held
-    edges       : [     // transition rules between nodes
+    name        : "my_space",         // the unique name of the space
+    nodes       : ["1", "2", "3"],    // the node list of the space 
+    start_node  : "1",                // the node to be activated when first enter the space
+
+    // the key combinations that enters the space when held
+    holding     : [KeyNames.alt, KeyNames.w],
+
+    // transition rules between nodes.
+    // trnaisiton will take effect when the `holding` keys of the space are pressed and `trigger` key of the egde is being pressed.
+    edges       : [    
         {from: "1", to "2", trigger: KeyNames.ArrowRight} , 
         {from: "2", to "3", trigger: KeyNames.ArrowRight} , 
         {from: "3", to "1", trigger: KeyNames.ArrowRight} , 
@@ -279,6 +303,7 @@ const my_space: SpaceDefinition = {
 To apply a space, pass it to the `KeyEventManager`:
 ```js
 import { KeyEventManager } from "@ftyyy/mouseless"
+
 function App(){
     <KeyEventManager
         spaces = {[my_space]} // pass the space definition to `KeyEventManager` here!
@@ -297,10 +322,10 @@ function App(){
 }
 ```
 
-### Navigator Hooks
+#### Navigator Hooks
 
-- **`useSpaceNavigatorState`**: Returns current activated space and node.
-- **`useSpaceNavigatoronMoveRegister`**: Provides register/unregister functions for listerners to movements between nodes in the space.
+- **`useSpaceNavigatorState`**: Returns the names of current activated space and node.
+- **`useSpaceNavigatoronMoveRegister`**: Provides register/unregister functions for callback functions when a movement between nodes in the space is happening.
 
 ```js
 import * as React from "react"
@@ -309,9 +334,9 @@ import {
     useSpaceNavigatoronMoveRegister , 
 } from "@ftyyy/mouseless"
 
-// they are both strings actually. You can just use `string`. 
+
 import type {
-    SpaceName , 
+    SpaceName , // (they are both strings actually. You can just use `string`) 
     NodeName , 
 } from "@ftyyy/mouseless"
 
@@ -331,7 +356,7 @@ function YourComponent(){
             end_space   ?: SpaceName, 
             end_node    ?: NodeName , 
         )=>{
-            if(start_space == end_space){
+            if(start_space == end_space && start_space == "my_space"){
                 set_words(`moved from ${start_node} to ${end_node}`)
             }
         }
@@ -345,7 +370,7 @@ function YourComponent(){
     },[])
 
     
-    // if `nodename` is current activated, give it a solid border.
+    // if a node is current activated, give it a solid border.
     const make_styles = (nodename: string)=>{
         if(node == nodename){
             return {style: {
@@ -354,7 +379,6 @@ function YourComponent(){
         }
         return {}
     }
-
 
     return (space == "my_space") && (<div>
         <p {...make_styles("1")}>element 1</p>
