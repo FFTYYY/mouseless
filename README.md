@@ -161,7 +161,7 @@ function App(){
 - **pressing** / **releasing** events: when a key that is being pressed or being released, it will trigger an event (just like the original `keyDown` and `keyUp` events).
 -  the combination of these two types of information.
 
-#### KeyNames
+#### Key Names
 
 `mouseless` provides an object `KeyNames` to define the names of keys. But you can also just use strings as key names.
 
