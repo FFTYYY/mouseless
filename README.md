@@ -25,9 +25,7 @@ Code below are simplified. For full example code, see the [example folder](/exam
 
 **Track Held Keys**
 
-Detect when specific key combinations (e.g. `ctrl` + `s`) are being held.
-
-(Also notice how default browser behavior of `ctrl` + `s` is suppressed.)
+Detect when specific key combinations (e.g. `ctrl` + `s`) are being held. (Also notice how default browser behavior of `ctrl` + `s` is suppressed.)
 
 ```javascript
 import { useKeyHoldingState } from "@ftyyy/mouseless"
@@ -51,7 +49,7 @@ function MyComponent(){
 
 **Navigate UI with the Keyboard**
 
-Move between UI elements and trigger actions with keyboard.
+Move between UI elements and simulates clicking with keyboard.
 
 ```javascript
 import { 
@@ -162,6 +160,17 @@ function App(){
 - **holding**: for a key combination that is being pressed & held, they are called holding keys. `mouseless` keeps track of the state of all holding keys.
 - **pressing** / **releasing** events: when a key that is being pressed or being released, it will trigger an event (just like the original `keyDown` and `keyUp` events).
 -  the combination of these two types of information.
+
+#### KeyNames
+
+`mouseless` provides an object `KeyNames` to define the names of keys. But you can also just use strings as key names.
+
+```js
+import { KeyNames } from "@ftyyy/mouseless"
+
+console.log(KeyNames.ctrl)    // "Control"
+console.log(KeyNames.Control) // "Control"
+```
 
 ### Hooks
 
