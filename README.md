@@ -40,27 +40,17 @@ function MyComponent(){
 
 ```javascript
 function MyComponent({onClick}){
-    const holding = useKeyHoldingState([
-        KeyNames.alt, 
-        KeyNames.w , 
-    ])
+    const holding = useKeyHoldingState([KeyNames.alt, KeyNames.w])
     const [space, node] = useSpaceNavigatorState()
-    const [
-        addOnKeyEventHandler, 
-        delOnKeyEventHandler
-    ] = useKeyEventsHandlerRegister()
+    const [add_handler, del_handler] = useKeyEventsHandlerRegister()
 
     React.useEffect(()=>{
         const handler = ()=>(space == "my_space" && onClick(node))
-        addOnKeyEventHandler(
-            [KeyNames.alt, KeyNames.w], KeyNames.Enter,
-            false, handler , 
-        )
+        add_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter,
+            false, handler)
         return ()=>{
-            delOnKeyEventHandler(
-                [KeyNames.alt, KeyNames.w], KeyNames.Enter,
-                false, handler , 
-            )
+            del_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter,
+                false, handler)
         }
     }, [space , node])
 
@@ -90,27 +80,18 @@ function MyComponent(){
     const R = useKeyHoldingState([...keys, KeyNames.ArrowRight])
     const U = useKeyHoldingState([...keys, KeyNames.ArrowUp])
     const D = useKeyHoldingState([...keys, KeyNames.ArrowDown])
-
-    const [pos, set_pos] = React.useState(
-        {x: 0, y: 0}
-    )
+    const [pos, set_pos] = React.useState({x: 0, y: 0})
 
     React.useEffect(()=>{
         const interval = setInterval(() => {
             let dx = (R ? 4 : 0) - (L ? 4 : 0)
             let dy = (D ? 4 : 0) - (U ? 4 : 0)
-
             set_pos({x: pos.x + dx, y: pos.y + dy})
         }, 10)
-        return ()=>{
-            clearInterval(interval)
-        }
-        
+        return ()=>{clearInterval(interval)}
     }, [pos, L, R, U, D])
 
-    return (!holding) ? <></> : (
-        <Plane x={pos.x} y={pos.y}>
-    )
+    return (!holding) ? <></> : <Plane x={pos.x} y={pos.y}>
 }    
 ```
 
