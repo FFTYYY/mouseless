@@ -40,22 +40,15 @@ function MyComponent(){
 
 ```javascript
 function MyComponent({onClick}){
-    const holding = useKeyHoldingState([
-            KeyNames.alt, KeyNames.w])
+    const holding = useKeyHoldingState([KeyNames.alt, KeyNames.w])
     const [space, node] = useSpaceNavigatorState()
-    const [add_handler, del_handler] = 
-        useKeyEventsHandlerRegister()
+    const [add_handler, del_handler] = useKeyEventsHandlerRegister()
 
     React.useEffect(()=>{
-        const handler = ()=>(space == "my_space" 
-            && onClick(node))
-        add_handler([KeyNames.alt, KeyNames.w], 
-            KeyNames.Enter,
-            false, handler)
+        const handler = ()=>(space == "my_space" && onClick(node))
+        add_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter, false, handler)
         return ()=>{
-            del_handler([KeyNames.alt, KeyNames.w], 
-                KeyNames.Enter,
-                false, handler)
+            del_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter, false, handler)
         }
     }, [space , node])
 
