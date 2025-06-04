@@ -10,6 +10,7 @@
 
 <table style="border: none !important; border-collapse: collapse !important; border-spacing: 0 !important; padding: 0 !important; margin: 0 !important;">
 <tr style="border: none !important;">
+
 <td style="border: none !important; padding: 0 !important;" width="50%">
 
 **Keep Tracking of Holding State**
@@ -56,6 +57,9 @@ function MyComponent(){
 ![illu_navi.gif](resources/illu_navi.gif)
 
 </td>
+
+<tr style="border: none !important;">
+<td style="border: none !important; padding: 0 !important;" width="50%">
 
 **Use Keyboard to Move UI Elements**
 
