@@ -196,7 +196,7 @@ console.log(KeyNames.Control) // "Control"
     ```
 - **`useKeyEventsHandlerRegister`** 
 
-    Returns `[add_handler, del_handler]` functions to register high-level key events listeners.
+    Returns `[add_handler, del_handler]` functions to register/unregister high-level key event listeners.
 
     `add_handler` listens to the event that a key is pressing or releasing, while a combination of keys are being held. Unlike the original `keyDown` event, even when the pressing key is kept held after pressing, the event will only be triggered once. 
     ```js
