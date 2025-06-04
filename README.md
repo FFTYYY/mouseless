@@ -2,6 +2,7 @@
 
 `mouseless` is a React library that for defining high-level keyboard interactions.
 
+
 ## Installation
 
 Install from npm:
@@ -11,7 +12,11 @@ npm install @ftyyy/mouseless
 
 ## Feature Highlights
 
-Below are simplified examples. For full example code, see [example](/example/).
+See this [demo page](https://fftyyy.github.io/mouseless/) for the interactive examples.
+
+Code below are simplified. For full example code, see the [example folder](/example/).
+
+
 
 <table style="border: none !important; border-collapse: collapse !important; border-spacing: 0 !important; padding: 0 !important; margin: 0 !important;">
 <tr style="border: none !important;">
