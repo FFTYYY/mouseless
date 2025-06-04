@@ -46,9 +46,11 @@ function MyComponent({onClick}){
 
     React.useEffect(()=>{
         const handler = ()=>(space == "my_space" && onClick(node))
-        add_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter, false, handler)
+        add_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter,
+            false, handler)
         return ()=>{
-            del_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter, false, handler)
+            del_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter,
+                false, handler)
         }
     }, [space , node])
 
