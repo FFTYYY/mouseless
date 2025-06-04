@@ -8,6 +8,7 @@ export default defineConfig(({ command, mode }) => {
     const isExample = mode === "example"
 
     return {
+        base: isExample ? "/mouseless/" : "/",
         plugins: [
             react(),
             ...(isLib ? [
