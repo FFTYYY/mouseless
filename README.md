@@ -64,9 +64,11 @@ function MyComponent({onClick}){
     ] = useKeyEventsHandlerRegister()
 
     React.useEffect(()=>{
-        const f = ()=>((space == "my_space") && onClick(node))
-        add_handler(keys, "Enter", false, f)
-        return ()=>{ del_handler(keys, "Enter", false, f) }
+        const handler = ()=>(
+            (space == "my_space") && onClick(node)
+        )
+        add_handler(keys,"Enter" false,handler)
+        return ()=>{del_handler(keys,"Enter",false,handler)}
     }, [space , node])
 
     return (holding && (space == "my_space")) && (
