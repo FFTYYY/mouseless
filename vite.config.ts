@@ -42,7 +42,7 @@ export default defineConfig(({ command, mode }) => {
                     },
                 },
             },
-            outDir: "dist",
+            outDir: isLib ? "dist" : "../docs",
         },
         root: isExample ? "example" : undefined,
     }
