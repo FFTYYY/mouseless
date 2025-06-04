@@ -77,7 +77,7 @@ function MyComponent({onClick}){
     }, [space , node])
 
     return (holding && (space == "my_space")) && (
-        <Penel cur_node={node}>
+        <Penel cur_node={node} />
     )
 }
 ```
