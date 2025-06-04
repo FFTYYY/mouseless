@@ -1,27 +1,24 @@
 {
-    "name": "mouseless",
-    "private": true,
-    "version": "0.0.0",
+    "name": "@ftyyy/mouseless",
+    "version": "0.0.2",
     "type": "module",
-    "main": "dist/index.js",
-    "module": "dist/index.esm.js",
+    "main": "dist/mouseless.umd.cjs",
+    "module": "dist/mouseless.js",
     "types": "dist/index.d.ts",
-    "files": [
+    "files": [  
         "dist"
     ],
     "author": "Yongyi Yang",
     "license": "MIT",
     "scripts": {
         "dev": "cd example && vite",
-        "build": "tsc -b && vite build",
+        "build": "npm run build:lib && npm run build:example",
+        "build:lib": "tsc -b && vite build --mode lib",
+        "build:example": "vite build --mode example",
         "lint": "eslint .",
         "preview": "vite preview"
     },
     "dependencies": {
-        "@emotion/react": "^11.14.0",
-        "@emotion/styled": "^11.14.0",
-        "@mui/material": "^7.1.0",
-        "framer-motion": "^12.15.0",
         "immer": "^10.1.1",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",
@@ -40,6 +37,14 @@
         "typescript": "~5.8.3",
         "typescript-eslint": "^8.30.1",
         "vite": "^6.3.5",
-        "vite-plugin-dts": "^4.5.4"
+        "vite-plugin-dts": "^4.5.4",
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.0",
+        "@mui/material": "^7.1.0",
+        "framer-motion": "^12.15.0"
+    },
+    "publishConfig": {
+        "access": "public"
     }
+
 }

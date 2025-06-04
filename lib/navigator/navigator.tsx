@@ -172,7 +172,7 @@ function useSpaceNavigatoronMoveRegister(){
  */
 function make_register_handlers(
     space: SpaceDefinition , 
-    start_node: NodeName,
+    start_node: NodeName | undefined,
     push_operation: (operation: SpaceNaviGatorOperation) => void , 
 ): Parameters<KeyEventHandlerRegisterFunc>[]
 {
@@ -181,11 +181,12 @@ function make_register_handlers(
         space.holding,
         "", // 全部按住时触发
         false,
-        ()=>{push_operation([{
+        ()=>{
+            push_operation([{
             if_space : "_none", 
             if_node  : "_none", 
             set_space: space.name, 
-            set_node : start_node || space.start_node
+            set_node : start_node ?? space.start_node
         }])}
     ])
     handlers.push([
@@ -272,11 +273,16 @@ function SpaceNavigator({
         if(!push_operation) return
 
         const handlers = spaces.reduce((acc, space)=>{
+            let ret = make_register_handlers(
+                space,
+                last_nodes[space.name], // 初始节点
+                push_operation,
+            )
             return  [
                 ...acc,
                 ...make_register_handlers(
                     space,
-                    last_nodes[space.name] || space.start_node, // 初始节点
+                    last_nodes[space.name], // 初始节点
                     push_operation,
                 )
             ]
@@ -332,6 +338,7 @@ function SpaceNavigator({
             // 执行操作
             set_state(op.set_space, op.set_node)
 
+            
             if(op.set_last && cur_name && cur_node){
                 set_last_node(cur_name, cur_node)
             }

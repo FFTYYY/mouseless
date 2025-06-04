@@ -18,7 +18,7 @@
         "allowSyntheticDefaultImports" : true,
         "paths"                        : {
             "mouseless": [
-                "../lib/index.ts"
+                "../lib/index.tsx"
             ]
         }
     },

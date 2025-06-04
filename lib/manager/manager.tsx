@@ -220,6 +220,12 @@ function InnerKeyEventManager({
         useShallow(state => state.holding_keys)
     )
 
+    // holding keys要放到外面来，这样才能触发组件自动更新
+    const event_handlers = useStore(
+        store_ref.current, 
+        useShallow(state => state.handlers)
+    )
+
     React.useEffect(() => {
         const event_store = store_ref.current?.getState()
         if(!event_store){
@@ -249,11 +255,11 @@ function InnerKeyEventManager({
 
             // 找到对应的handler并触发（第一类：按住holding的时候按下pressing）
             const idx = encode_idx(holding_keys, now_key, false)
-            event_store.handlers[idx]?.forEach(h=>h(e)) 
+            event_handlers[idx]?.forEach(h=>h(e)) 
 
             // 找到对应的handler并触发（第二类：所有holding按键都被按下）
             const idx_2 = encode_idx([...holding_keys, now_key], "", false)
-            event_store.handlers[idx_2]?.forEach(h=>h(e)) 
+            event_handlers[idx_2]?.forEach(h=>h(e)) 
 
             // 更新holding_keys
             add_holding_key(now_key)
@@ -267,11 +273,11 @@ function InnerKeyEventManager({
 
             // 找到对应的reverse handler并触发（第一类：按住holding的时候抬起pressing）
             const idx = encode_idx(holding_keys, now_key, true)
-            event_store.handlers[idx]?.forEach(h=>h(e)) 
+            event_handlers[idx]?.forEach(h=>h(e)) 
 
             // 找到对应的reverse handler并触发（第二类：破坏holding按键组合）
             const idx_2 = encode_idx(holding_keys, "", true)
-            event_store.handlers[idx_2]?.forEach(h=>h(e)) 
+            event_handlers[idx_2]?.forEach(h=>h(e)) 
 
             // 更新holding_keys
             del_holding_key(now_key)
@@ -290,6 +296,7 @@ function InnerKeyEventManager({
         del_keyup_handler,
         holding_keys,
         preventing_default,
+        event_handlers , 
     ])
 
     // 这个组件会自动向下提供keydown_proxy和keyup_proxy
