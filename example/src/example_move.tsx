@@ -13,10 +13,6 @@ import {
 import {
     useKeyHoldingState,
     KeyNames , 
-    SpaceDefinition,
-    Edge , 
-    useSpaceNavigatorState ,
-    NodeName,
 } from "mouseless"
 
 import {
