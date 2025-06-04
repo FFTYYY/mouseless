@@ -14,7 +14,7 @@
         "dev": "cd example && vite",
         "build": "npm run build:lib && npm run build:example",
         "build:lib": "tsc -b && vite build --mode lib",
-        "build:example": "vite build --mode example",
+        "build:example": "vite build --mode example --emptyOutDir",
         "lint": "eslint .",
         "preview": "vite preview"
     },
