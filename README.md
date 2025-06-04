@@ -92,7 +92,7 @@ function MyComponent({onClick}){
 
 **Move Elements with Keys**
 
-Simulate "drag and move" behavior using arrow keys
+Simulate "drag and move" behavior with arrow keys.
 
 ```javascript
 function MyComponent(){
