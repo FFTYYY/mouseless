@@ -14,13 +14,13 @@
 
 **Detecting Holding State**
   Keep tracking of wether a combination of keys are pressed.
-<!-- ```javascript
+```javascript
 function MyComponent(){
     const holding = useKeyHoldingState([KeyNames.ctrl, KeyNames.s])
 
     return holding ? <CatDance /> : <></>
 }
-``` -->
+```
 
 </td>
 <td style="border: none !important; padding: 0 !important;" width="50%">
