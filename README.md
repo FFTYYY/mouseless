@@ -46,7 +46,7 @@ function MyComponent(){
 
 **Navigate UI with the Keyboard**
 
-Move between UI elements using key combos and trigger actions on specific keys.
+Move between UI elements and trigger actions with keyboard.
 
 ```javascript
 import { 
