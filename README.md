@@ -236,11 +236,11 @@ function App(){
 
     To detect when a key combination is first reached, pass an empty string as the second argument.
 
-    For example, the following handler can be triggered either when `alt` is held and `w` is pressed, or when `w` is held and `alt` is pressed.
+    For example, the following handler triggers either when `alt` is held and `w` is pressed, or when `w` is held and `alt` is pressed.
     ```javascript
     add_handler([KeyNames.alt, KeyNames.w], "", false, handler)
     ```
-    Similarly, the following handler triggers either when whether `alt` is held and `w` is released, or when `w` is held and `alt` is released.
+    Similarly, the following handler triggers either when `alt` is held and `w` is released, or when `w` is held and `alt` is released.
     ```javascript
     add_handler([KeyNames.alt, KeyNames.w], "", true, handler)
     ```
