@@ -53,9 +53,9 @@ Move between UI elements and simulates clicking with keyboard.
 
 ```javascript
 import { 
-    useKeyHoldingState ,
+    useKeyHoldingState,
     useSpaceNavigatorState, 
-    useKeyEventsHandlerRegister
+    useKeyEventsHandlerRegister,
 } from "@ftyyy/mouseless"
 
 function MyComponent({onClick}){
@@ -98,6 +98,7 @@ function MyComponent({onClick}){
 Simulate "drag and move" behavior with arrow keys.
 
 ```javascript
+import { useKeyHoldingState } from "@ftyyy/mouseless"
 function MyComponent(){
     const keys = ["Alt", "r"]
     const holding = useKeyHoldingState(keys)
