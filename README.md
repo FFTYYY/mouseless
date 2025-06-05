@@ -286,7 +286,7 @@ Each space need to have a `holding` key combination. The space is activated only
 Each edge requires a `trigger` key that initiates movement from one node to another. It will only take effect when the corresponding space is currently active (i.e. the `holding` keys are held).
 
 ```js
-import type { SpaceDefinition } from "@ftyyy/mouseless"
+import { SpaceDefinition } from "@ftyyy/mouseless"
 
 const my_space: SpaceDefinition = {
     name        : "my_space",         // the unique name of the space
@@ -315,7 +315,7 @@ To apply a space, pass it to the `KeyEventManager`:
 import { KeyEventManager } from "@ftyyy/mouseless"
 
 function App(){
-    <KeyEventManager
+    return <KeyEventManager
         spaces = {[my_space]} // pass the space definition to `KeyEventManager` here!
         preventing_default = {[
             [KeyNames.alt, KeyNames.w], // surpass the default behavior 
@@ -381,20 +381,20 @@ function YourComponent(){
 
     
     // if a node is current activated, give it a solid border.
-    const make_styles = (nodename: string)=>{
-        if(node == nodename){
-            return {style: {
-                border: "1px solid #000"
-            }}
+    const make_styles = (node_name: string)=>{
+        if(node == node_name){
+            return {
+                style: { border: "1px solid #000" }
+            }
         }
         return {}
     }
 
-    return (space == "my_space") && (<div>
+    return (space == "my_space") ? (<div>
         <p {...make_styles("1")}>element 1</p>
         <p {...make_styles("2")}>element 2</p>
         <p {...make_styles("3")}>element 3</p>
-    <div>)
+    <div>) : <></>
 }
 ```
 
