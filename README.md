@@ -27,7 +27,7 @@ Code below are simplified. For full example code, see the [example folder](/exam
 
 Detect when specific key combinations (e.g. `ctrl` + `s`) are being held. (Also notice how default browser behavior of `ctrl` + `s` is suppressed.)
 
-```javascript
+```jsx
 import { useKeyHoldingState } from "@ftyyy/mouseless"
 function MyComponent(){
     const holding = useKeyHoldingState(["Ctrl", "s"])
@@ -51,7 +51,7 @@ function MyComponent(){
 
 Move between UI elements and simulates clicking with keyboard.
 
-```javascript
+```jsx
 import { 
     useKeyHoldingState,
     useSpaceNavigatorState, 
@@ -97,7 +97,7 @@ function MyComponent({onClick}){
 
 Simulate "drag and move" behavior with arrow keys.
 
-```javascript
+```jsx
 import { useKeyHoldingState } from "@ftyyy/mouseless"
 function MyComponent(){
     const keys = ["Alt", "r"]
@@ -136,7 +136,7 @@ function MyComponent(){
 
 Wrap all keyboard-aware components inside a `KeyEventManager`, which delegates `keyDown` and `keyUp` events. Use `preventing_default` to suppress default browser behavior for specified key combinations.
 
-```javascript
+```jsx
 import * as React from "react"
 import { KeyEventManager, KeyNames } from "@ftyyy/mouseless"
 
@@ -166,7 +166,7 @@ function App(){
 
 `mouseless` provides an object `KeyNames` to define the names of keys. But you can also just use strings as key names.
 
-```js
+```jsx
 import { KeyNames } from "@ftyyy/mouseless"
 
 console.log(KeyNames.ctrl)    // "Control"
@@ -181,7 +181,7 @@ console.log(KeyNames.Control) // "Control"
   
     Returns `true` if the given key combination is currently being held.
 
-    ```javascript 
+    ```jsx 
     import * as React from "react"
     import { 
         useKeyHoldingState , 
@@ -200,7 +200,7 @@ console.log(KeyNames.Control) // "Control"
     Returns `[add_handler, del_handler]` functions to register/unregister high-level key event listeners.
 
     `add_handler` listens to the event that a key is pressing or releasing, while a combination of keys are being held. Unlike the original `keyDown` event, even when the pressing key is kept held after pressing, the event will only be triggered once. 
-    ```js
+    ```jsx
     add_handler: (
         KeyName[],              // key combination that needs to be held to trigger the event
         KeyName,                // key that needs to be pressing / releasing to trigger the event
@@ -211,7 +211,7 @@ console.log(KeyNames.Control) // "Control"
     The `del_handler` has the same arguments with `add_handler`.
 
 
-    ```javascript 
+    ```jsx 
     import * as React from "react"
     import { 
         useKeyEventsHandlerRegister , 
@@ -285,7 +285,7 @@ Each space need to have a `holding` key combination. The space is activated only
 
 Each edge requires a `pressing` key that initiates movement from one node to another. It will only take effect when the corresponding space is currently active (i.e. the `holding` keys are held).
 
-```js
+```jsx
 import { SpaceDefinition } from "@ftyyy/mouseless"
 
 const my_space: SpaceDefinition = {
@@ -298,11 +298,11 @@ const my_space: SpaceDefinition = {
 
     // transition rules between nodes.
     // trnaisiton will take effect when the `holding` keys of the space are pressed and `trigger` key of the egde is being pressed.
-    // return `"no_action"` means not triggering this edge.
     edges       : [
         {
             pressing: KeyNames.ArrowRight, 
             onMove: (cur_node)=>(
+                // return `"no_action"` means not triggering this edge.
                 ({"1": "2", "2": "3", "3": "1"})[cur_node] ?? "_no_action"
             )
         } , 
@@ -317,7 +317,7 @@ const my_space: SpaceDefinition = {
 ```
 
 To apply a space, pass it to the `KeyEventManager`:
-```js
+```jsx
 import { KeyEventManager } from "@ftyyy/mouseless"
 
 function App(){
@@ -343,7 +343,7 @@ function App(){
 - **`useSpaceNavigatorState`**: Returns the names of current activated space and node.
 - **`useSpaceNavigatorOnMoveRegister`**: Provides register/unregister functions for movement handlers. These functions will be called when a movement between nodes in the space is happening.
 
-```js
+```jsx
 import * as React from "react"
 import {
     useSpaceNavigatorState , 
