@@ -222,10 +222,10 @@ console.log(KeyNames.Control) // "Control"
         const [add_handler, del_handler] = useKeyEventsHandlerRegister()
 
         React.useEffect(()=>{
-            const handler_1 = (){
+            const handler_1 = ()=>{
                 console.log("ctrl+w+enter pressed!")
             }
-            const handler_2 = (){
+            const handler_2 = ()=>{
                 console.log("ctrl+w+enter unpressed!")
             }
             add_handler(
@@ -291,7 +291,7 @@ import { SpaceDefinition } from "@ftyyy/mouseless"
 const my_space: SpaceDefinition = {
     name        : "my_space",         // the unique name of the space
     nodes       : ["1", "2", "3"],    // the node list of the space 
-    onStart     : ()=>"1",            // the node to be activated when first enter the space
+    onStart     : (last_node)=> (last_node ?? "1"),   // the node to be activated when first enter the space
 
     // the key combinations that enters the space when held
     holding     : [KeyNames.alt, KeyNames.w],
@@ -300,9 +300,18 @@ const my_space: SpaceDefinition = {
     // trnaisiton will take effect when the `holding` keys of the space are pressed and `trigger` key of the egde is being pressed.
     // return `"no_action"` means not triggering this edge.
     edges       : [
-        {pressing: KeyNames.ArrowRight, onMove: (cur_node?)=>({"1": "2", "2": "3": "3": "1"}[cur_node] ?? "_no_action")}
-
-        {pressing: KeyNames.ArrowLeft , onMove: (cur_node?)=>({"2": "1", "3": "2": "1": "3"}[cur_node] ?? "_no_action")}
+        {
+            pressing: KeyNames.ArrowRight, 
+            onMove: (cur_node)=>(
+                ({"1": "2", "2": "3", "3": "1"})[cur_node] ?? "_no_action"
+            )
+        } , 
+        {
+            pressing: KeyNames.ArrowLeft , 
+            onMove: (cur_node)=>(
+                ({"2": "1", "3": "2", "1": "3"})[cur_node] ?? "_no_action"
+            )
+        }
     ],
 }
 ```

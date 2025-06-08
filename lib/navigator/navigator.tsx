@@ -197,7 +197,7 @@ function make_register_handlers(
             if_space : "_none", 
             if_node  : "_none", 
             set_space: ()=>space.name, 
-            set_node : ()=>( last_node ?? space.onStart(last_node) )
+            set_node : ()=>( space.onStart(last_node) )
         }])}
     ])
     handlers.push([

@@ -35,7 +35,7 @@ const name2emoji = (name: string) => {
 const myspace: SpaceDefinition = {
     name        : "example",
     nodes       : ["1", "2", "3", "4", "5", "6", "7", "8", "9",],
-    onStart     : ()=>"1",
+    onStart     : (last_node)=>(last_node ?? "1"),
     holding     : [KeyNames.alt, KeyNames.w],
     edges       : (()=>{
         const A = [ ["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"] ]
