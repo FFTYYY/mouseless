@@ -12,7 +12,7 @@ import {
     Edge , 
     useSpaceNavigatorState ,
     NodeName,
-    useSpaceNavigatoronMoveRegister , 
+    useSpaceNavigatorOnMoveRegister , 
     SpaceName ,
     useKeyEventsHandlerRegister , 
 } from "mouseless"
@@ -35,7 +35,7 @@ const name2emoji = (name: string) => {
 const myspace: SpaceDefinition = {
     name        : "example",
     nodes       : ["1", "2", "3", "4", "5", "6", "7", "8", "9",],
-    start_node  : "1",
+    onStart     : ()=>"1",
     holding     : [KeyNames.alt, KeyNames.w],
     edges       : (()=>{
         const A = [ ["1", "2", "3"], ["4", "5", "6"], ["7", "8", "9"] ]
@@ -49,19 +49,22 @@ const myspace: SpaceDefinition = {
         ]
         let edges = new Array<Edge>()
 
-        for(let i = 0; i < A.length; i++){
-            for(let j = 0; j < A[i].length; j++){
-                for(let k = 0; k < 4; k++){
-                    const ni = (i + di[k] + 3) % 3
-                    const nj = (j + dj[k] + 3) % 3
-                    edges.push({
-                        from    : A[i][j],
-                        to      : A[ni][nj],
-                        trigger : trigger[k],
-                    })
+        for(let k = 0; k < 4; k++){edges.push({
+            pressing  : trigger[k],
+            onMove    : (from?: NodeName)=>{
+                for(let i = 0; i < A.length; i++){
+                    for(let j = 0; j < A[i].length; j++){
+                        
+                        const ni = (i + di[k] + 3) % 3
+                        const nj = (j + dj[k] + 3) % 3
+                        if(from == A[i][j]){
+                            return A[ni][nj]
+                        }
+                    }
                 }
-            }
-        }
+                return "_no_action"
+            },
+        })}
         return edges
     })(),
 }
@@ -70,7 +73,7 @@ function ExampleNavi(){
     const holding = useKeyHoldingState([KeyNames.alt, KeyNames.w])
     
     const [space, node] = useSpaceNavigatorState()
-    const [addOnMoveHandler, delOnMoveHandler] = useSpaceNavigatoronMoveRegister()
+    const [addOnMoveHandler, delOnMoveHandler] = useSpaceNavigatorOnMoveRegister()
     const [addOnKeyEventHandler, delOnKeyEventHandler] = useKeyEventsHandlerRegister()
     const [clicked_node, set_clicked_node] = React.useState<NodeName | null>(null)
 
@@ -191,7 +194,7 @@ function ExampleNavi(){
                             ["4", "5", "6"],
                             ["7", "8", "9"],
                         ].map((row, i)=>(
-                            <Box sx={{
+                            <Box key={i} sx={{
                                 display: "flex", 
                                 flexDirection: "row", 
                                 alignItems: "center", 

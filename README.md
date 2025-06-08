@@ -155,7 +155,7 @@ function App(){
 }
 ```
 
-#### Core Concepts
+#### Concepts
 
 `mouseless` will provide information of the following states/events:
 - **holding**: for a key combination that is being pressed & held, they are called holding keys. `mouseless` keeps track of the state of all holding keys.
@@ -283,7 +283,7 @@ A navigator is defined as a *graph* (called **space**). Each *node* of a space i
 
 Each space need to have a `holding` key combination. The space is activated only when this key combination is held.
 
-Each edge requires a `trigger` key that initiates movement from one node to another. It will only take effect when the corresponding space is currently active (i.e. the `holding` keys are held).
+Each edge requires a `pressing` key that initiates movement from one node to another. It will only take effect when the corresponding space is currently active (i.e. the `holding` keys are held).
 
 ```js
 import { SpaceDefinition } from "@ftyyy/mouseless"
@@ -291,21 +291,18 @@ import { SpaceDefinition } from "@ftyyy/mouseless"
 const my_space: SpaceDefinition = {
     name        : "my_space",         // the unique name of the space
     nodes       : ["1", "2", "3"],    // the node list of the space 
-    start_node  : "1",                // the node to be activated when first enter the space
+    onStart     : ()=>"1",            // the node to be activated when first enter the space
 
     // the key combinations that enters the space when held
     holding     : [KeyNames.alt, KeyNames.w],
 
     // transition rules between nodes.
     // trnaisiton will take effect when the `holding` keys of the space are pressed and `trigger` key of the egde is being pressed.
-    edges       : [    
-        {from: "1", to "2", trigger: KeyNames.ArrowRight} , 
-        {from: "2", to "3", trigger: KeyNames.ArrowRight} , 
-        {from: "3", to "1", trigger: KeyNames.ArrowRight} , 
+    // return `"no_action"` means not triggering this edge.
+    edges       : [
+        {pressing: KeyNames.ArrowRight, onMove: (cur_node?)=>({"1": "2", "2": "3": "3": "1"}[cur_node] ?? "_no_action")}
 
-        {from: "2", to "1", trigger: KeyNames.ArrowLeft} , 
-        {from: "3", to "2", trigger: KeyNames.ArrowLeft} , 
-        {from: "1", to "3", trigger: KeyNames.ArrowLeft} , 
+        {pressing: KeyNames.ArrowLeft , onMove: (cur_node?)=>({"2": "1", "3": "2": "1": "3"}[cur_node] ?? "_no_action")}
     ],
 }
 ```
@@ -335,13 +332,13 @@ function App(){
 #### Navigator Hooks
 
 - **`useSpaceNavigatorState`**: Returns the names of current activated space and node.
-- **`useSpaceNavigatoronMoveRegister`**: Provides register/unregister functions for callback functions when a movement between nodes in the space is happening.
+- **`useSpaceNavigatorOnMoveRegister`**: Provides register/unregister functions for movement handlers. These functions will be called when a movement between nodes in the space is happening.
 
 ```js
 import * as React from "react"
 import {
     useSpaceNavigatorState , 
-    useSpaceNavigatoronMoveRegister , 
+    useSpaceNavigatorOnMoveRegister , 
 } from "@ftyyy/mouseless"
 
 
@@ -355,7 +352,7 @@ function YourComponent(){
     const [space, node] = useSpaceNavigatorState()
 
     // get registeration functions for moving events listeners
-    const [add_moving_listener, del_moving_listener] = useSpaceNavigatoronMoveRegister()
+    const [add_move_handler, del_move_handler] = useSpaceNavigatoronMoveRegister()
 
     React.useEffect(()=>{
 
@@ -372,10 +369,10 @@ function YourComponent(){
         }
 
         // register the handler
-        add_moving_listener(handler)
+        add_move_handler(handler)
         return ()=>{
             // unregister the handler when unmount
-            del_moving_listener(handler)
+            del_move_handler(handler)
         }
     },[])
 

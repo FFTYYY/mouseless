@@ -166,7 +166,7 @@ function create_keyevents(): StoreApi<KeyEvents>{
                 }
                 return hdlrs
             })
-            return {handlers}
+            return {handlers: handlers}
         })} , 
 
         unregister_handler: (
@@ -179,7 +179,7 @@ function create_keyevents(): StoreApi<KeyEvents>{
                 }
                 return hdlrs
             })
-            return {handlers}
+            return {handlers: handlers}
         })},
 
     }))

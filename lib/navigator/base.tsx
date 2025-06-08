@@ -11,15 +11,14 @@ type SpaceName = string
 type NodeName = string
 
 interface Edge{
-    from    : NodeName  ,
-    to      : NodeName  ,
-    trigger : KeyName   ,  
+    pressing       : KeyName   ,
+    onMove         : (from?: NodeName)=>NodeName | undefined ,
 }
 
 interface SpaceDefinition{
     name        : SpaceName     ,
     nodes       : NodeName[]    ,
     holding     : KeyName[]     , 
-    start_node  : NodeName      ,
     edges       : Edge[]        ,
+    onStart     : (last_node?: NodeName)=>NodeName  ,
 }

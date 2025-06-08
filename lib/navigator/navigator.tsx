@@ -34,7 +34,7 @@ import {
 export {
     useSpaceNavigatorState , 
     SpaceNavigator , 
-    useSpaceNavigatoronMoveRegister , 
+    useSpaceNavigatorOnMoveRegister , 
 }
 
 export type {
@@ -42,29 +42,40 @@ export type {
 }
 
 /**
+ * `SpaceNaviGatorOperationItem`定义了一个延时的操作。
+ * 这个操作会根据当前的空间和节点来判断是否要执行操作。
+ * 
  * 如果当前在`space`和`from`，那么就前往`to`。
  */
 interface SpaceNaviGatorOperationItem{
     if_space : SpaceName | "_any" | "_none"
     if_node  : NodeName  | "_any" | "_none"
-    set_space: SpaceName
-    set_node : NodeName
+    set_space: (cur_node?: NodeName )=>(SpaceName | undefined | "_no_action")
+    set_node : (cur_node?: SpaceName)=>(NodeName  | undefined | "_no_action")
+
+    // 是否设置last_node
     set_last ?: boolean 
 }
+/**
+ * `SpaceNaviGatorOperation`是一系列竞争的`SpaceNaviGatorOperationItem`。
+ * 按下一个键时，每个operation中只能触发一个item来执行。
+ */
 type SpaceNaviGatorOperation = SpaceNaviGatorOperationItem[]
+
+
 type onMoveHandler = (
     start_space ?: SpaceName, 
-    start_node  ?: NodeName, 
+    start_node  ?: NodeName , 
     end_space   ?: SpaceName, 
-    end_node    ?: NodeName,
+    end_node    ?: NodeName ,
 ) => void
 
 interface SpaceNavigatorState{
-    name?: SpaceName
+    space?: SpaceName
     node?: NodeName
-    set_name: (name: SpaceName) => void
-    set_node: (node: NodeName) => void
-    set_state: (name: SpaceName, node: NodeName) => void
+    set_space : (space?: SpaceName) => void
+    set_node  : (node?: NodeName) => void
+    set_state : (space?: SpaceName, node?: NodeName) => void
 
     operations: SpaceNaviGatorOperation[]
     push_operation   : (operation: SpaceNaviGatorOperation) => void
@@ -83,16 +94,16 @@ interface SpaceNavigatorState{
 
 function create_space_navigator_store(): StoreApi<SpaceNavigatorState>{
     return createStore<SpaceNavigatorState>((set)=>({
-        name : undefined,
-        node : undefined,
-        set_name: (name: SpaceName) => {
-            set({name})
+        space : undefined,
+        node  : undefined,
+        set_space: (space?: SpaceName) => {
+            set({space: space}) 
         },
-        set_node: (node: NodeName) => {
-            set({node})
+        set_node: (node?: NodeName) => {
+            set({node: node})
         },
-        set_state: (name: SpaceName, node: NodeName) => {
-            set({name, node})
+        set_state: (space?: SpaceName, node?: NodeName) => {
+            set({space: space, node: node})
         },
 
         
@@ -146,13 +157,13 @@ function useSpaceNavigatorState(){
     }
     return useStore(store, useShallow((state)=>{
         return [
-            state.name,
+            state.space,
             state.node,
         ]
     }))
 }
 
-function useSpaceNavigatoronMoveRegister(){
+function useSpaceNavigatorOnMoveRegister(){
     const store = React.useContext(SpaceNavigator_ScopedStore)
     if(!store){
         throw new Error("Not in context of SpaceNavigator")
@@ -172,7 +183,7 @@ function useSpaceNavigatoronMoveRegister(){
  */
 function make_register_handlers(
     space: SpaceDefinition , 
-    start_node: NodeName | undefined,
+    last_node: NodeName | undefined,
     push_operation: (operation: SpaceNaviGatorOperation) => void , 
 ): Parameters<KeyEventHandlerRegisterFunc>[]
 {
@@ -185,8 +196,8 @@ function make_register_handlers(
             push_operation([{
             if_space : "_none", 
             if_node  : "_none", 
-            set_space: space.name, 
-            set_node : start_node ?? space.start_node
+            set_space: ()=>space.name, 
+            set_node : ()=>( last_node ?? space.onStart(last_node) )
         }])}
     ])
     handlers.push([
@@ -197,31 +208,31 @@ function make_register_handlers(
             push_operation([{
                 if_space : space.name, 
                 if_node  : "_any"    , 
-                set_space: "_none"   , 
-                set_node : "_none"   , 
+                set_space: ()=>undefined,  
+                set_node : ()=>undefined,  
                 set_last : true      , // 设置下一次的开始节点
             }])
         }
     ])
-
+    // 每次按下一个键，只能触发一个edge
     let navi_operation: {
-        [trigger: string]: SpaceNaviGatorOperation
+        [pressing: string]: SpaceNaviGatorOperation
     } = {}
     for(const edge of space.edges){
-        if(!navi_operation[edge.trigger]){
-            navi_operation[edge.trigger] = new Array<SpaceNaviGatorOperationItem>()
+        if(!navi_operation[edge.pressing]){
+            navi_operation[edge.pressing] = new Array<SpaceNaviGatorOperationItem>()
         }
-        navi_operation[edge.trigger].push({
+        navi_operation[edge.pressing].push({
             if_space : space.name, 
-            if_node  : edge.from, 
-            set_space: space.name, 
-            set_node : edge.to
+            if_node  : "_any", 
+            set_space: ()=>"_no_action", 
+            set_node : (cur_node?: NodeName)=>( edge.onMove(cur_node))
         })
     }
-    for (const [trigger, operation] of Object.entries(navi_operation)){ 
+    for (const [pressing, operation] of Object.entries(navi_operation)){ 
         handlers.push([
-            space.holding,
-            trigger as KeyName, // 全部按住时触发
+            space.holding , 
+            pressing as KeyName,
             false,
             ()=>{push_operation(operation)}
         ])
@@ -243,7 +254,7 @@ function SpaceNavigator({
     )
     // holding keys要放到外面来，这样才能触发组件自动更新
     const [
-        cur_name, 
+        cur_space, 
         cur_node, 
         cur_operations,
         onmove_handlers,
@@ -251,7 +262,7 @@ function SpaceNavigator({
     ] = useStore(
         store_ref.current, 
         useShallow(state => [
-            state.name, 
+            state.space, 
             state.node, 
             state.operations, 
             state.onmove_handlers,
@@ -273,11 +284,6 @@ function SpaceNavigator({
         if(!push_operation) return
 
         const handlers = spaces.reduce((acc, space)=>{
-            let ret = make_register_handlers(
-                space,
-                last_nodes[space.name], // 初始节点
-                push_operation,
-            )
             return  [
                 ...acc,
                 ...make_register_handlers(
@@ -308,7 +314,8 @@ function SpaceNavigator({
         // 注意这里是不会触发自动更新的
         const state = store_ref.current?.getState() 
         if(!state) return
-        const {pop_operation, set_state, set_last_node} = state
+        const {pop_operation, set_last_node}   = state
+        const {set_state, set_node, set_space} = state
         
         if(cur_operations.length <= 0){
             return 
@@ -318,9 +325,9 @@ function SpaceNavigator({
         for(const op of operation){
             // 一次取一个operation item
             
-            const flag_1 = op.if_space == cur_name 
+            const flag_1 = op.if_space == cur_space 
                 || op.if_space == "_any"
-                || (op.if_space == "_none" && !cur_name)
+                || (op.if_space == "_none" && !cur_space)
 
             const flag_2 = op.if_node  == cur_node    
                 || op.if_node  == "_any"
@@ -331,16 +338,24 @@ function SpaceNavigator({
                 continue
             }
 
+            const ret_space = op.set_space(cur_node)
+            const ret_node  = op.set_node (cur_node)
+            if(ret_space == "_no_action" && ret_node == "_no_action" && !op.set_last){
+                // 没有执行任何操作，跳过
+                continue
+            }
+
+            const tar_space = ret_space == "_no_action" ? cur_space : ret_space
+            const tar_node  = ret_node  == "_no_action" ? cur_node  : ret_node
+
             onmove_handlers.forEach(handler=>{
-                handler(cur_name, cur_node, op.set_space, op.set_node)
+                handler(cur_space, cur_node, tar_space, tar_node)
             })
             
-            // 执行操作
-            set_state(op.set_space, op.set_node)
+            set_state(tar_space, tar_node)
 
-            
-            if(op.set_last && cur_name && cur_node){
-                set_last_node(cur_name, cur_node)
+            if(op.set_last && cur_space && cur_node){
+                set_last_node(cur_space, cur_node)
             }
             
             break // 只执行一次操作
@@ -349,7 +364,7 @@ function SpaceNavigator({
         pop_operation()
     },[
         cur_operations , 
-        cur_name,
+        cur_space,
         cur_node,
         spaces , 
         onmove_handlers , 
