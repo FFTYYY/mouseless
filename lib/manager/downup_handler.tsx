@@ -73,10 +73,12 @@ function useUpDownHandlers(selector: (store: UpDownHandlers) => any): any{
     return useStore(store,useShallow(selector))
 }
 
-function UpDownHandlersProvider({children}:{children: React.ReactNode}){
+const UpDownHandlersProvider = React.memo((
+    {children}:{children: React.ReactNode}
+)=>{
 
     const store = React.useRef(create_updownhandlers_store())
     return <UpDownHandlers_ScopedStore.Provider value={store.current}>
             {children}
     </UpDownHandlers_ScopedStore.Provider>  
-}
+})

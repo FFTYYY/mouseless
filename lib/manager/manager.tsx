@@ -190,99 +190,94 @@ type KeyEventManagerChildren = React.ReactNode | ((
     keyup_proxy  : KeyUpProxy,
 ) => React.ReactNode) 
 
-function InnerKeyEventManager({
+const InnerKeyEventManager = React.memo(({
     children,
     preventing_default , 
 }:{
     children    : KeyEventManagerChildren,
     preventing_default: KeyName[][]
-}){
-    const [keydown_proxy,keyup_proxy] = useKeyDownUpProxy()
-
+})=>{
+    const [keydown_proxy, keyup_proxy] = useKeyDownUpProxy()
+    const store_ref = React.useRef<StoreApi<KeyEvents>>(create_keyevents())
+    
+    // 使用 useCallback 缓存事件注册函数
     const [
         add_keydown_handler, 
         del_keydown_handler,
         add_keyup_handler,
         del_keyup_handler,
     ] = useUpDownHandlers(
-        store=>[
+        React.useCallback(store=>[
             store.add_keydown_handler,
             store.del_keydown_handler,
             store.add_keyup_handler,
             store.del_keyup_handler,
-        ]
+        ], [])
     )
-    const store_ref = React.useRef<StoreApi<KeyEvents>>(create_keyevents())
+    
+    // 使用 useCallback 缓存事件处理函数
+    const on_keydown = React.useCallback((e: KeyEvent) => {
+        const now_key: KeyName = e.key as KeyName
+        const state = store_ref.current?.getState()
+        if(!state) return
 
-    // holding keys要放到外面来，这样才能触发组件自动更新
-    const holding_keys = useStore(
-        store_ref.current, 
-        useShallow(state => state.holding_keys)
-    )
+        const holding_keys   = state.holding_keys
+        const event_handlers = state.handlers
+        const add_holding_key = state.add_holding_key
 
-    // holding keys要放到外面来，这样才能触发组件自动更新
-    const event_handlers = useStore(
-        store_ref.current, 
-        useShallow(state => state.handlers)
-    )
-
-    React.useEffect(() => {
-        const event_store = store_ref.current?.getState()
-        if(!event_store){
+        // 如果要阻止的按键全部被按下，则阻止默认行为
+        if(preventing_default.some(arr=>{
+            return arr.every(k=>holding_keys.includes(k) || now_key == k)
+        })){
+            e.preventDefault()
+        }
+        
+        // 如果这个键已经按下，则什么都不触发
+        if(holding_keys.includes(now_key)){
             return
         }
 
-        // 这里event_store不会触发组件自动更新，因为我们只用set函数
-        const {
-            add_holding_key,
-            del_holding_key,
-        } = event_store
+        // 找到对应的handler并触发（第一类：按住holding的时候按下pressing）
+        const idx = encode_idx(holding_keys, now_key, false)
+        event_handlers[idx]?.forEach(h=>h(e)) 
 
-        const on_keydown = (e: KeyEvent) => {
-            const now_key: KeyName = e.key as KeyName
+        // 找到对应的handler并触发（第二类：所有holding按键都被按下）
+        const idx_2 = encode_idx([...holding_keys, now_key], "", false)
+        event_handlers[idx_2]?.forEach(h=>h(e)) 
 
-            // 如果要阻止的按键全部被按下，则阻止默认行为
-            if(preventing_default.some(arr=>{
-                return arr.every(k=>holding_keys.includes(k) || now_key == k)
-            })){
-                e.preventDefault()
-            }
-            
-            // 如果这个键已经按下，则什么都不触发
-            if(holding_keys.includes(now_key)){
-                return
-            }
+        // 更新holding_keys
+        add_holding_key(now_key)
+    }, [preventing_default])
 
-            // 找到对应的handler并触发（第一类：按住holding的时候按下pressing）
-            const idx = encode_idx(holding_keys, now_key, false)
-            event_handlers[idx]?.forEach(h=>h(e)) 
+    const on_keyup = React.useCallback((e: KeyEvent) => {
+        const now_key: KeyName = e.key as KeyName
+        const state = store_ref.current?.getState()
+        if(!state) return
 
-            // 找到对应的handler并触发（第二类：所有holding按键都被按下）
-            const idx_2 = encode_idx([...holding_keys, now_key], "", false)
-            event_handlers[idx_2]?.forEach(h=>h(e)) 
+        const holding_keys   = state.holding_keys
+        const event_handlers = state.handlers
+        const del_holding_key = state.del_holding_key
 
-            // 更新holding_keys
-            add_holding_key(now_key)
-        }
-        const on_keyup = (e: KeyEvent) => {
-            const now_key: KeyName = e.key as KeyName
-            if(!holding_keys.includes(now_key)){
-                console.warn("抬起的键未曾被按下。")
-                return
-            }
-
-            // 找到对应的reverse handler并触发（第一类：按住holding的时候抬起pressing）
-            const idx = encode_idx(holding_keys, now_key, true)
-            event_handlers[idx]?.forEach(h=>h(e)) 
-
-            // 找到对应的reverse handler并触发（第二类：破坏holding按键组合）
-            const idx_2 = encode_idx(holding_keys, "", true)
-            event_handlers[idx_2]?.forEach(h=>h(e)) 
-
-            // 更新holding_keys
-            del_holding_key(now_key)
+        if(!holding_keys.includes(now_key)){
+            console.warn("抬起的键未曾被按下。")
+            return
         }
 
+        // 找到对应的reverse handler并触发（第一类：按住holding的时候抬起pressing）
+        const idx = encode_idx(holding_keys, now_key, true)
+        event_handlers[idx]?.forEach(h=>h(e)) 
+
+        // 找到对应的reverse handler并触发（第二类：破坏holding按键组合）
+        const idx_2 = encode_idx(holding_keys, "", true)
+        event_handlers[idx_2]?.forEach(h=>h(e)) 
+
+        // 更新holding_keys
+        del_holding_key(now_key)
+    }, [])
+
+
+    // 使用 useLayoutEffect 来处理事件绑定，避免闪烁
+    React.useLayoutEffect(() => {
         add_keydown_handler(on_keydown)
         add_keyup_handler(on_keyup)
         return () => {
@@ -290,25 +285,28 @@ function InnerKeyEventManager({
             del_keyup_handler(on_keyup)
         }
     }, [
+        on_keydown, 
+        on_keyup, 
         add_keydown_handler, 
         add_keyup_handler, 
         del_keydown_handler, 
         del_keyup_handler,
-        holding_keys,
-        preventing_default,
-        event_handlers , 
     ])
 
-    // 这个组件会自动向下提供keydown_proxy和keyup_proxy
-    if(typeof children === "function"){
-        return <KeyEvents_ScopedStore value={store_ref.current}>{children(
-            keydown_proxy,
-            keyup_proxy,
-        )}</KeyEvents_ScopedStore>
-    }
-    return <KeyEvents_ScopedStore value={store_ref.current}>{
-        children
-    }</KeyEvents_ScopedStore>
-}
+    // 使用 useMemo 缓存 Context 值
+    const context_value = React.useMemo(() => store_ref.current, [])
+
+    // 使用 useMemo 缓存子组件
+    const children_element = React.useMemo(() => {
+        if(typeof children === "function"){
+            return children(keydown_proxy, keyup_proxy)
+        }
+        return children
+    }, [children, keydown_proxy, keyup_proxy])
+
+    return <KeyEvents_ScopedStore value={context_value}>
+        {children_element}
+    </KeyEvents_ScopedStore>
+})
 
 

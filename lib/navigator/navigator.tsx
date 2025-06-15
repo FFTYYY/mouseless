@@ -314,8 +314,7 @@ function SpaceNavigator({
         // 注意这里是不会触发自动更新的
         const state = store_ref.current?.getState() 
         if(!state) return
-        const {pop_operation, set_last_node}   = state
-        const {set_state, set_node, set_space} = state
+        const {pop_operation, set_last_node, set_state} = state
         
         if(cur_operations.length <= 0){
             return 
@@ -370,15 +369,17 @@ function SpaceNavigator({
         onmove_handlers , 
     ])
 
+    const children_element = React.useMemo(() => {
+        if(typeof children === "function"){
+            return children(keydown_proxy, keyup_proxy)
+        }
+        return children
+    }, [children, keydown_proxy, keyup_proxy])
+    const context_value = React.useMemo(()=> store_ref.current, [])
+
     // 这个组件会自动向下提供keydown_proxy和keyup_proxy
-    if(typeof children == "function"){
-        return <SpaceNavigator_ScopedStore value={store_ref.current}> {children(
-            keydown_proxy,
-            keyup_proxy  , 
-        )}</SpaceNavigator_ScopedStore>
-    }
-    return <SpaceNavigator_ScopedStore value={store_ref.current}> 
-        {children}
+    return <SpaceNavigator_ScopedStore value={context_value}> 
+        {children_element}
     </SpaceNavigator_ScopedStore>
 
 }

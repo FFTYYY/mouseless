@@ -46,20 +46,29 @@ type KeyUpDownProxyProviderChildren = React.ReactNode | ((
     keyup_proxy  : KeyUpProxy,
 ) => React.ReactNode)
 
-function KeyUpDownProxyProvider({children}:{children: KeyUpDownProxyProviderChildren}){
+const KeyUpDownProxyProvider = React.memo((
+    {children}:{children: KeyUpDownProxyProviderChildren}
+)=>{
 
     const [keydown_handlers,keyup_handlers] = useUpDownHandlers(store => [
         store.keydown_handlers,
         store.keyup_handlers,
     ])
+    const keydown_handlers_ref = React.useRef<KeyDownProxy[]>([])
+    const keyup_handlers_ref   = React.useRef<KeyUpProxy[]>([])
 
-    const keydown_proxy = React.useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-        keydown_handlers.forEach((handler: KeyDownProxy) => handler(event))
-    }, [keydown_handlers])
+    React.useEffect(()=>{
+        keydown_handlers_ref.current = keydown_handlers
+        keyup_handlers_ref.current   = keyup_handlers
+    },[keydown_handlers,keyup_handlers])
 
-    const keyup_proxy = React.useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
-        keyup_handlers.forEach((handler: KeyUpProxy) => handler(event))
-    }, [keyup_handlers])
+    const keydown_proxy = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        keydown_handlers_ref.current.forEach((handler: KeyDownProxy) => handler(event))
+    }
+
+    const keyup_proxy = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        keyup_handlers_ref.current.forEach((handler: KeyUpProxy) => handler(event))
+    }
 
 
     if(typeof children === "function"){
@@ -72,4 +81,4 @@ function KeyUpDownProxyProvider({children}:{children: KeyUpDownProxyProviderChil
         keydown_proxy: keydown_proxy,
         keyup_proxy  : keyup_proxy,
     }}>{children}</KeyDownUpProxyContext.Provider>
-}
+})
