@@ -35,6 +35,7 @@ export {
     useKeyEvents,
     useKeyHoldingState,
     useKeyEventsHandlerRegister , 
+    useAllHoldingKeys,
 }
 export type {
     KeyEventManagerChildren ,
@@ -65,7 +66,7 @@ type KeyEventHandler = (e: KeyEvent)=>void
 type KeyEventHandlerRegisterFunc = (
     holding     : KeyName[] , 
     pressing    : KeyName ,
-    reverse     : boolean ,
+    keyup       : boolean | "down" | "up",
     func        : KeyEventHandler ,
 ) =>void  
 
@@ -136,6 +137,12 @@ function useKeyHoldingState(keys: KeyName[]): boolean{
     })
 }
 
+function useAllHoldingKeys(): KeyName[]{
+    return useKeyEvents(state=>{
+        return state.holding_keys
+    })
+}
+
 function create_keyevents(): StoreApi<KeyEvents>{
     return createStore<KeyEvents>(set=>({
         holding_keys: [] , 
@@ -153,9 +160,8 @@ function create_keyevents(): StoreApi<KeyEvents>{
         })},
 
         handlers: {} as {[idx: string]: (()=>void)[]},
-        register_handler: (
-            holding: KeyName[], pressing: KeyName, reverse: boolean, func: KeyEventHandler
-        ) => {set(state=>{
+        register_handler: ( holding, pressing, keyup, func) => {set(state=>{
+            const reverse = (keyup === "up") || (keyup === true)
             const idx = encode_idx(holding, pressing, reverse)
             const handlers = produce(state.handlers, hdlrs=>{
                 if(hdlrs[idx] && !hdlrs[idx].includes(func)){
@@ -169,9 +175,8 @@ function create_keyevents(): StoreApi<KeyEvents>{
             return {handlers: handlers}
         })} , 
 
-        unregister_handler: (
-            holding: KeyName[], pressing: KeyName, reverse: boolean, func: KeyEventHandler
-        ) => {set(state=>{
+        unregister_handler: ( holding, pressing, keyup, func) => {set(state=>{
+            const reverse = (keyup === "up") || (keyup === true)
             const idx = encode_idx(holding, pressing, reverse)
             const handlers = produce(state.handlers, hdlrs=>{
                 if(hdlrs[idx]){
@@ -259,7 +264,6 @@ const InnerKeyEventManager = React.memo(({
         const del_holding_key = state.del_holding_key
 
         if(!holding_keys.includes(now_key)){
-            console.warn("抬起的键未曾被按下。")
             return
         }
 
@@ -292,6 +296,34 @@ const InnerKeyEventManager = React.memo(({
         del_keydown_handler, 
         del_keyup_handler,
     ])
+
+    // 为了防止按键在其他地方抬起不被检测到，需要监听全局按键抬起事件。
+    React.useEffect(()=>{
+        const global_up = (e: KeyboardEvent)=>{
+            const now_key: KeyName = e.key as KeyName
+            const state = store_ref.current?.getState()
+            if(!state) return
+            const del_holding_key = state.del_holding_key
+            const holding_keys   = state.holding_keys
+            const event_handlers = state.handlers
+
+            if(!holding_keys.includes(now_key)){
+                return
+            }
+    
+            // XXX: 要不要触发第一类?
+            // 找到所有第二类handler并触发（第二类：破坏holding按键组合）
+            // 因为这一类handler本质上跟holding_keys有关。
+            const idx_2 = encode_idx(holding_keys, "", true)
+            event_handlers[idx_2]?.forEach(h=>h(e as any as KeyEvent)) 
+
+            del_holding_key(now_key)
+        }
+        window.addEventListener("keyup", global_up)
+        return ()=>{
+            window.removeEventListener("keyup", global_up)
+        }
+    }, [])
 
     // 使用 useMemo 缓存 Context 值
     const context_value = React.useMemo(() => store_ref.current, [])

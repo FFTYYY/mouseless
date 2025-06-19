@@ -18,6 +18,7 @@ import {
     SpaceName,
     NodeName,
     SpaceDefinition , 
+    NO_ACTION , 
 } from "./base"
 
 import {
@@ -47,15 +48,14 @@ export type {
  * 
  * 如果当前在`space`和`from`，那么就前往`to`。
  */
-interface SpaceNaviGatorOperationItem{
-    if_space : SpaceName | "_any" | "_none"
-    if_node  : NodeName  | "_any" | "_none"
-    set_space: (cur_node?: NodeName )=>(SpaceName | undefined | "_no_action")
-    set_node : (cur_node?: SpaceName)=>(NodeName  | undefined | "_no_action")
+type SpaceNaviGatorOperationItem = (
+    cur_space: SpaceName | undefined, 
+    cur_node : NodeName  | undefined, 
+    set_space: (space?: SpaceName | typeof NO_ACTION) => void, 
+    set_node : (node?: NodeName   | typeof NO_ACTION) => void,
+    set_last : (last?: boolean) => void,
+) => void
 
-    // 是否设置last_node
-    set_last ?: boolean 
-}
 /**
  * `SpaceNaviGatorOperation`是一系列竞争的`SpaceNaviGatorOperationItem`。
  * 按下一个键时，每个operation中只能触发一个item来执行。
@@ -193,25 +193,28 @@ function make_register_handlers(
         "", // 全部按住时触发
         false,
         ()=>{
-            push_operation([{
-            if_space : "_none", 
-            if_node  : "_none", 
-            set_space: ()=>space.name, 
-            set_node : ()=>( space.onStart(last_node) )
-        }])}
+            push_operation([(cur_space, cur_node, set_space, set_node, set_last)=>{
+                if(cur_space != space.name || cur_node == undefined){
+                    set_space(space.name)
+                    set_node(space.onStart(last_node))
+                }
+            }])
+    }
     ])
     handlers.push([
         space.holding,
         "",   // 离开空间时触发
         true, // 抬起时触发
         ()=>{
-            push_operation([{
-                if_space : space.name, 
-                if_node  : "_any"    , 
-                set_space: ()=>undefined,  
-                set_node : ()=>undefined,  
-                set_last : true      , // 设置下一次的开始节点
-            }])
+            push_operation([
+                (cur_space, cur_node, set_space, set_node, set_last)=>{
+                    // 即使不在当前空间，我们也强制离开
+                    // if(cur_space == space.name)
+                    set_space(undefined)
+                    set_node (undefined)
+                    set_last(true)
+                }
+            ])
         }
     ])
     // 每次按下一个键，只能触发一个edge
@@ -222,12 +225,14 @@ function make_register_handlers(
         if(!navi_operation[edge.pressing]){
             navi_operation[edge.pressing] = new Array<SpaceNaviGatorOperationItem>()
         }
-        navi_operation[edge.pressing].push({
-            if_space : space.name, 
-            if_node  : "_any", 
-            set_space: ()=>"_no_action", 
-            set_node : (cur_node?: NodeName)=>( edge.onMove(cur_node))
-        })
+        navi_operation[edge.pressing].push(
+            (cur_space, cur_node, set_space, set_node, set_last)=>{
+                if(cur_space == space.name){
+                    set_space(NO_ACTION)
+                    set_node(edge.onMove(cur_node))
+                }
+            }
+        )
     }
     for (const [pressing, operation] of Object.entries(navi_operation)){ 
         handlers.push([
@@ -324,28 +329,25 @@ function SpaceNavigator({
         for(const op of operation){
             // 一次取一个operation item
             
-            const flag_1 = op.if_space == cur_space 
-                || op.if_space == "_any"
-                || (op.if_space == "_none" && !cur_space)
+            let ret_space: SpaceName | typeof NO_ACTION | undefined = NO_ACTION
+            let ret_node: NodeName   | typeof NO_ACTION | undefined = NO_ACTION
+            let ret_last: boolean | undefined = undefined
+            const flag_1 = op(
+                cur_space, 
+                cur_node, 
+                (space?: SpaceName | typeof NO_ACTION)=>{ret_space = space}, 
+                (node?: NodeName   | typeof NO_ACTION)=>{ret_node = node}, 
+                (last?: boolean)=>{ret_last = last}
+            )
 
-            const flag_2 = op.if_node  == cur_node    
-                || op.if_node  == "_any"
-                || (op.if_node  == "_none" && !cur_node)
             
-            // 如果操作没有匹配，就跳过
-            if((!flag_1) || (!flag_2)){
-                continue
-            }
-
-            const ret_space = op.set_space(cur_node)
-            const ret_node  = op.set_node (cur_node)
-            if(ret_space == "_no_action" && ret_node == "_no_action" && !op.set_last){
+            if(ret_space == NO_ACTION && ret_node == NO_ACTION && (ret_last == undefined)){
                 // 没有执行任何操作，跳过
                 continue
             }
 
-            const tar_space = ret_space == "_no_action" ? cur_space : ret_space
-            const tar_node  = ret_node  == "_no_action" ? cur_node  : ret_node
+            const tar_space = ret_space == NO_ACTION ? cur_space : ret_space
+            const tar_node  = ret_node  == NO_ACTION ? cur_node  : ret_node
 
             onmove_handlers.forEach(handler=>{
                 handler(cur_space, cur_node, tar_space, tar_node)
@@ -353,7 +355,7 @@ function SpaceNavigator({
             
             set_state(tar_space, tar_node)
 
-            if(op.set_last && cur_space && cur_node){
+            if((ret_last != undefined) && cur_space && cur_node){
                 set_last_node(cur_space, cur_node)
             }
             

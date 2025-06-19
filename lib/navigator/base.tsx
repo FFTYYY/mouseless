@@ -1,5 +1,8 @@
 import * as React from "react"
 import { KeyName } from "../base"
+export {
+    NO_ACTION,
+}
 export type {
     SpaceName,
     NodeName,
@@ -7,12 +10,14 @@ export type {
     SpaceDefinition,
 }
 
+const NO_ACTION = "_no_action"
+
 type SpaceName = string
-type NodeName = string
+type NodeName  = string
 
 interface Edge{
     pressing       : KeyName   ,
-    onMove         : (from?: NodeName)=>NodeName | undefined ,
+    onMove         : (from?: NodeName)=>NodeName | undefined | typeof NO_ACTION ,
 }
 
 interface SpaceDefinition{
