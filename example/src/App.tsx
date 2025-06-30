@@ -9,6 +9,7 @@ import {
 import { 
     KeyEventManager ,
     KeyNames , 
+    SpaceDefinition , 
 } from "mouseless"
 
 import { ExampleHolding } from "./example_holding"
@@ -16,13 +17,23 @@ import { ExampleNavi , myspace as navi_space} from "./example_navi"
 import { ExampleMove } from "./example_move"
 export { App }
 
+const disturb_space: SpaceDefinition = {
+    name        : "disturb",
+    nodes       : ["1", "2", "3", "4", "5", "6", "7", "8", "9",],
+    onStart     : (last_node)=>(last_node ?? "1"),
+    holding     : [KeyNames.alt, KeyNames.r],
+    edges       : [],
+}
+
+
 function App(){
     return <KeyEventManager
-        spaces = {[navi_space]}
+        spaces = {[navi_space, disturb_space]}
         preventing_default = {[
             [KeyNames.ctrl, KeyNames.s],
             [KeyNames.alt, KeyNames.w],
             [KeyNames.alt, KeyNames.e],
+            [KeyNames.alt, KeyNames.r],
         ]}
     >{(keydown_proxy, keyup_proxy) => {
         return <Box 

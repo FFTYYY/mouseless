@@ -274,6 +274,13 @@ console.log(KeyNames.Control) // "Control"
     ```
     
 
+    You can also use `"down"` or `"up"` as the third argument.
+    ```js
+    // these two lines has exactly the same behavior
+    add_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter, false, handler)
+    add_handler([KeyNames.alt, KeyNames.w], KeyNames.Enter, "down", handler)
+    ```
+
 ### Space Navigator
 
 The **Space Navigator** is a built-in plugin provided by `mouseless` that enables keyboard-based navigation across UI elements.
@@ -404,6 +411,15 @@ function YourComponent(){
 }
 ```
 
+`useSpaceNavigatorState` accepts two optional parameters: `target_space: SpaceName` and `target_node: NodeName`. With one of two parameters specified, `useSpaceNavigatorState` will only return results when the specified parameter is met, and otherwise return `[undefined, undefined]`. This allows a finer control over the rerender behavior of the React component.
+```js
+function YourComponent(){
+    // only rerender when `space=="my_space"`
+    const [space, node] = useSpaceNavigatorState("my_space")
+
+    return (space == "my_space") ? <div>my space!</div> : <></>
+}
+```
 ## License
 
 [MIT License](LICENSE)

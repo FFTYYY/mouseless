@@ -15,6 +15,8 @@ import {
     useSpaceNavigatorOnMoveRegister , 
     SpaceName ,
     useKeyEventsHandlerRegister , 
+
+    NO_ACTION,
 } from "mouseless"
 
 import {
@@ -62,7 +64,7 @@ const myspace: SpaceDefinition = {
                         }
                     }
                 }
-                return "_no_action"
+                return NO_ACTION
             },
         })}
         return edges
@@ -72,7 +74,7 @@ const myspace: SpaceDefinition = {
 function ExampleNavi(){
     const holding = useKeyHoldingState([KeyNames.alt, KeyNames.w])
     
-    const [space, node] = useSpaceNavigatorState()
+    const [space, node] = useSpaceNavigatorState(myspace.name)
     const [addOnMoveHandler, delOnMoveHandler] = useSpaceNavigatorOnMoveRegister()
     const [addOnKeyEventHandler, delOnKeyEventHandler] = useKeyEventsHandlerRegister()
     const [clicked_node, set_clicked_node] = React.useState<NodeName | null>(null)

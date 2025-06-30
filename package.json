@@ -1,6 +1,6 @@
 {
     "name": "@ftyyy/mouseless",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "type": "module",
     "main": "dist/mouseless.umd.cjs",
     "module": "dist/mouseless.js",

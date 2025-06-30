@@ -36,6 +36,7 @@ export {
     useSpaceNavigatorState , 
     SpaceNavigator , 
     useSpaceNavigatorOnMoveRegister , 
+    useSpaceNavigatorRawState , 
 }
 
 export type {
@@ -150,16 +151,26 @@ const SpaceNavigator_ScopedStore = React.createContext<
     StoreApi<SpaceNavigatorState> | null
 >(null)
 
-function useSpaceNavigatorState(){
+function useSpaceNavigatorRawState(selector: (state: SpaceNavigatorState)=>any){
+    const store = React.useContext(SpaceNavigator_ScopedStore)
+    if(!store){
+        throw new Error("Not in context of SpaceNavigator")
+    }
+    return useStore(store, selector)
+}
+
+function useSpaceNavigatorState(target_space?: SpaceName, target_node?: NodeName){
     const store = React.useContext(SpaceNavigator_ScopedStore)
     if(!store){
         throw new Error("Not in context of SpaceNavigator")
     }
     return useStore(store, useShallow((state)=>{
-        return [
-            state.space,
-            state.node,
-        ]
+        const flag_space = state.space == target_space || target_space == undefined
+        const flag_node  = state.node  == target_node  || target_node  == undefined
+        if((!flag_space) || (!flag_node)){
+            return [undefined, undefined]
+        }
+        return [state.space, state.node]
     }))
 }
 
