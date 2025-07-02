@@ -12,7 +12,8 @@ import {
     useStore , 
 } from "zustand"
 import {useShallow} from "zustand/react/shallow"
-import {produce} from "immer"
+import {produce } from "immer"
+import {throttle} from "lodash"
 
 import {
     KeyNames,
@@ -171,6 +172,9 @@ function create_keyevents(): StoreApi<KeyEvents>{
             return {holding_keys: state.holding_keys.filter(k=>k !== key)}
         })},
         clear_holding_keys: () => {set(state=>{
+            if(state.holding_keys.length <= 0){
+                return {}
+            }
             return {holding_keys: []}
         })},
 
@@ -326,17 +330,19 @@ const InnerKeyEventManager = React.memo(({
 
     React.useEffect(()=>{
 
-        const clearall = ()=>{
+        const _clearall = ()=>{
             const state = store_ref.current?.getState()
             if(!state) return
-            const holding_keys = state.holding_keys
-            const event_handlers = state.handlers
+            // XXX 不知道这里该不该触发事件。
+            // const holding_keys = state.holding_keys
+            // const event_handlers = state.handlers
 
-            const idx_2 = encode_idx(holding_keys, "", true)
-            event_handlers[idx_2]?.forEach(h=>h(new KeyboardEvent(""))) 
+            // const idx_2 = encode_idx(holding_keys, "", true)
+            // event_handlers[idx_2]?.forEach(h=>h(new KeyboardEvent(""))) 
 
             state?.clear_holding_keys()
         }
+        const clearall = throttle(_clearall, 100) // 每100ms最多触发一次
         
         /** 为了防止按键在其他地方抬起而没有被监听到，
          * 这里监听全局按键抬起事件，防止按键在别处抬起而没有被检测到。 */
