@@ -15,6 +15,7 @@ import {
 import { ExampleHolding } from "./example_holding"
 import { ExampleNavi , myspace as navi_space} from "./example_navi"
 import { ExampleMove } from "./example_move"
+import { ExampleEditor } from "./example_editor"
 export { App }
 
 const disturb_space: SpaceDefinition = {
@@ -65,6 +66,7 @@ function App(){
             <ExampleHolding />
             <ExampleNavi />
             <ExampleMove />
+            <ExampleEditor />
 
             <Typography sx={{
                 position: "absolute",

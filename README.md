@@ -410,9 +410,14 @@ function YourComponent(){
     <div>) : <></>
 }
 ```
-
+#### Efficiency Optimization
 `useSpaceNavigatorState` accepts two optional parameters: `target_space: SpaceName` and `target_node: NodeName`. With one of two parameters specified, `useSpaceNavigatorState` will only return results when the specified parameter is met, and otherwise return `[undefined, undefined]`. This allows a finer control over the rerender behavior of the React component.
 ```js
+import * as React from "react"
+import {
+    useSpaceNavigatorState , 
+} from "@ftyyy/mouseless"
+
 function YourComponent(){
     // only rerender when `space=="my_space"`
     const [space, node] = useSpaceNavigatorState("my_space")
@@ -420,6 +425,98 @@ function YourComponent(){
     return (space == "my_space") ? <div>my space!</div> : <></>
 }
 ```
+
+`mouseless` also provides a lower-level hook `useSpaceNavigatorRawState`, allowing users to specify a selector. The selector can access to the internal `state` and return whatever inforamtion user requires. Use `state.space` and `state.node` to access current space and node.
+```js
+import * as React from "react"
+import {
+    useSpaceNavigatorState , 
+} from "@ftyyy/mouseless"
+
+// a space shared by two components
+const my_space: SpaceDefinition = {
+    name        : "my_space", 
+
+    // 2 components share the same space.
+    // node format: `${component_idx},{node_idx}`.
+    nodes       : [
+        "0,0", "0,1", "0,2", 
+        "1,0", "1,1", "1,2"
+    ], 
+
+    onStart     : (last_node)=> (last_node ?? "0,0"), 
+    holding     : [KeyNames.alt, KeyNames.w],
+    edges       : [
+        {// switch component
+            pressing: KeyNames.ArrowUp, 
+            onMove: (cur_node)=>{
+                const [component, idx] = cur_node.split(",")
+                return `${parseInt(component) ^ 1},${idx}`
+            }
+        } , 
+        {// switch component
+            pressing: KeyNames.ArrowDown, 
+            onMove: (cur_node)=>{
+                const [component, idx] = cur_node.split(",")
+                return `${parseInt(component) ^ 1},${idx}`
+            }
+        } , 
+        {// switch idx
+            pressing: KeyNames.ArrowLeft, 
+            onMove: (cur_node)=>{
+                const [component, idx] = cur_node.split(",")
+                return `${component},${(parseInt(idx)+2)%3}`
+            }
+        } , 
+        {// switch idx
+            pressing: KeyNames.ArrowLeft, 
+            onMove: (cur_node)=>{
+                const [component, idx] = cur_node.split(",")
+                return `${component},${(parseInt(idx)+1)%3}`
+            }
+        } , 
+    ],
+}
+
+function YourComponent_1(){
+    const [node] = useSpaceNavigatorRawState(React.useCallback(()=>{
+        const {space, node} = state
+        if(space != my_space.name){
+            // when navigating in other spaces, the component would not rerender.
+            return undefined 
+        }
+        const [component, idx] = node.split(",")
+        if(components != "1"){
+            // when switching in this spaces but the other component, this component would also not rerender.
+            return undefined
+        }
+        return idx
+    }, []))
+
+    return <div>current node is {node}</div>
+}
+
+function YourComponent_2(){
+    const [node] = useSpaceNavigatorRawState(React.useCallback(()=>{
+        const {space, node} = state
+        if(space != my_space.name){
+            // when navigating in other spaces, the component would not rerender.
+            return undefined 
+        }
+        const [component, idx] = node.split(",")
+        if(components != "2"){
+            // when switching in this spaces but the other component, this component would also not rerender.
+            return undefined
+        }
+        return idx
+    }, []))
+
+    return <div>current node is {node}</div>
+}
+
+```
+
+
 ## License
 
 [MIT License](LICENSE)

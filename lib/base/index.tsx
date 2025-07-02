@@ -1,5 +1,6 @@
 export { 
-    KeyNames 
+    KeyNames , 
+    KeysThatDoNotRepeat , 
 }
 export type {
     KeyName
@@ -90,6 +91,40 @@ const KeyNames = {
     "arrowdown": "ArrowDown",
     "arrowleft": "ArrowLeft",
     "arrowright": "ArrowRight",
+    "<-": "ArrowLeft",
+    "->": "ArrowRight",
+    "up": "ArrowUp",
+    "down": "ArrowDown",
+    "left": "ArrowLeft",
+    "right": "ArrowRight",   
     
+    "capslock": "CapsLock",
+    "numlock": "NumLock",
+    "scrolllock": "ScrollLock",
+    "insert": "Insert",
+    "pageup": "PageUp",
+    "pagedown": "PageDown",
+    "home": "Home",
+    "end": "End",
+    "esc": "Escape",
+    "del": "Delete",
+    "space": "Space",
 } as const
+
+const KeysThatDoNotRepeat: KeyName[] = [
+    "Control",
+    "Shift",
+    "Alt",
+    "Meta",
+    "CapsLock",
+    "NumLock",
+    "ScrollLock",
+    "Insert",
+    "PageUp",
+    "PageDown",
+    "Home",
+    "End",
+]
+
+
 

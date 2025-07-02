@@ -44,7 +44,7 @@ export type {
     KeyEvent , 
 }
 
-type KeyEvent = React.KeyboardEvent<HTMLDivElement>
+type KeyEvent = React.KeyboardEvent<HTMLDivElement> | KeyboardEvent
 
 interface KeyEventHandlerIdx{
     holding : KeyName[] , 
@@ -98,6 +98,11 @@ interface KeyEvents{
     holding_keys: KeyName[] , 
     add_holding_key(key: KeyName): void
     del_holding_key(key: KeyName): void
+    clear_holding_keys(): void
+    
+    // XXX 目前press_time没有用上。未来可能用他来实现双击之类的功能。
+    press_time  : {[key: string]: number} , // 每个key最近按下的时间 
+    refresh_press_time(key: KeyName): void
 
     handlers: {
         [idx: string]: KeyEventHandler[] , 
@@ -147,16 +152,33 @@ function create_keyevents(): StoreApi<KeyEvents>{
     return createStore<KeyEvents>(set=>({
         holding_keys: [] , 
         add_holding_key: (key: KeyName) => {set(state=>{
+            const nowtime = Date.now()
+            const press_time = state.press_time
             if(state.holding_keys.includes(key)){
-                return {}
+                return {
+                    press_time: {...press_time, [key]: nowtime}
+                }
             }
-            return {holding_keys: [...state.holding_keys, key]}
+            return {
+                holding_keys: [...state.holding_keys, key],
+                press_time  : {...press_time, [key]: nowtime}
+            }
         })},
         del_holding_key: (key: KeyName) => {set(state=>{
             if(!state.holding_keys.includes(key)){
                 return {}
             }
             return {holding_keys: state.holding_keys.filter(k=>k !== key)}
+        })},
+        clear_holding_keys: () => {set(state=>{
+            return {holding_keys: []}
+        })},
+
+        press_time  : {} , 
+        refresh_press_time: (key: KeyName) => {set(state=>{
+            const press_time = state.press_time
+            const nowtime = Date.now()
+            return {press_time: {...press_time, [key]: nowtime}}
         })},
 
         handlers: {} as {[idx: string]: (()=>void)[]},
@@ -229,6 +251,7 @@ const InnerKeyEventManager = React.memo(({
         const holding_keys   = state.holding_keys
         const event_handlers = state.handlers
         const add_holding_key = state.add_holding_key
+        const refresh_press_time = state.refresh_press_time
 
         // 如果要阻止的按键全部被按下，则阻止默认行为
         if(preventing_default.some(arr=>{
@@ -239,6 +262,10 @@ const InnerKeyEventManager = React.memo(({
         
         // 如果这个键已经按下，则什么都不触发
         if(holding_keys.includes(now_key)){
+            // XXX 可能也可以监听一个允许repeat的press_time
+            if(!e.repeat){
+                refresh_press_time(now_key) // 刷新当前按键的按下时间
+            }
             return
         }
 
@@ -297,8 +324,22 @@ const InnerKeyEventManager = React.memo(({
         del_keyup_handler,
     ])
 
-    // 为了防止按键在其他地方抬起不被检测到，需要监听全局按键抬起事件。
     React.useEffect(()=>{
+
+        const clearall = ()=>{
+            const state = store_ref.current?.getState()
+            if(!state) return
+            const holding_keys = state.holding_keys
+            const event_handlers = state.handlers
+
+            const idx_2 = encode_idx(holding_keys, "", true)
+            event_handlers[idx_2]?.forEach(h=>h(new KeyboardEvent(""))) 
+
+            state?.clear_holding_keys()
+        }
+        
+        /** 为了防止按键在其他地方抬起而没有被监听到，
+         * 这里监听全局按键抬起事件，防止按键在别处抬起而没有被检测到。 */
         const global_up = (e: KeyboardEvent)=>{
             const now_key: KeyName = e.key as KeyName
             const state = store_ref.current?.getState()
@@ -320,8 +361,14 @@ const InnerKeyEventManager = React.memo(({
             del_holding_key(now_key)
         }
         window.addEventListener("keyup", global_up)
+        window.addEventListener("blur", clearall)
+        window.addEventListener("compositionend", clearall)
+        window.addEventListener("input", clearall)
         return ()=>{
             window.removeEventListener("keyup", global_up)
+            window.removeEventListener("blur", clearall)
+            window.removeEventListener("compositionend", clearall)
+            window.removeEventListener("input", clearall)
         }
     }, [])
 
