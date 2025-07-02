@@ -426,7 +426,7 @@ function YourComponent(){
 }
 ```
 
-`mouseless` also provides a lower-level hook `useSpaceNavigatorRawState`, allowing users to specify a selector. The selector can access to the internal `state` and return whatever inforamtion user requires. Use `state.space` and `state.node` to access current space and node.
+`mouseless` also provides a lower-level hook `useSpaceNavigatorRawState`, allowing users to specify a selector. The selector can access to the internal `state` and return whatever inforamtion the user requires. The component would not rerender as long as the return value of `useSpaceNavigatorRawState` is unchanged. Use `state.space` and `state.node` to access current space and node.
 ```js
 import * as React from "react"
 import {
@@ -487,7 +487,7 @@ function YourComponent_1(){
         }
         const [component, idx] = node.split(",")
         if(components != "1"){
-            // when switching in this spaces but the other component, this component would also not rerender.
+            // when switching in this space but the other component, this component would also not rerender.
             return undefined
         }
         return idx
@@ -505,7 +505,7 @@ function YourComponent_2(){
         }
         const [component, idx] = node.split(",")
         if(components != "2"){
-            // when switching in this spaces but the other component, this component would also not rerender.
+            // when switching in this space but the other component, this component would also not rerender.
             return undefined
         }
         return idx
