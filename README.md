@@ -479,7 +479,7 @@ const my_space: SpaceDefinition = {
 }
 
 function YourComponent_1(){
-    const node = useSpaceNavigatorRawState(React.useCallback(()=>{
+    const node = useSpaceNavigatorRawState(React.useCallback((state)=>{
         const {space, node} = state
         if(space != my_space.name){
             // when navigating in other spaces, the component would not rerender.
@@ -497,7 +497,7 @@ function YourComponent_1(){
 }
 
 function YourComponent_2(){
-    const node = useSpaceNavigatorRawState(React.useCallback(()=>{
+    const node = useSpaceNavigatorRawState(React.useCallback((state)=>{
         const {space, node} = state
         if(space != my_space.name){
             // when navigating in other spaces, the component would not rerender.
